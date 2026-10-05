@@ -112,9 +112,6 @@ export function MoneyInput({ value, onChange, label, placeholder }: { value?: nu
   );
 }
 
-/** Shop staff: the manager and the owner. */
-export const MAX_ADMINS = 2;
-
 export function confirmDelete(what: string): boolean {
   return window.confirm(`Remove ${what}? This can't be undone.`);
 }

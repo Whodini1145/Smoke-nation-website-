@@ -3,7 +3,7 @@ import { showToast } from '../../components/Overlay';
 import { getDB, resetDB, uid, updateDB, updateSession, useDB, useSession } from '../../data/store';
 import type { Settings } from '../../data/types';
 import { hashPassword } from '../../lib/util';
-import { MAX_ADMINS, MoneyInput } from './shared';
+import { MoneyInput } from './shared';
 
 function NumberField({ label, value, suffix, onChange, step = 0.01 }: { label: string; value: number; suffix: string; onChange: (n: number) => void; step?: number }) {
   return (
@@ -23,6 +23,9 @@ function AdminAccounts() {
   const [f, setF] = useState({ name: '', email: '', password: '' });
   const [pw, setPw] = useState('');
   const [error, setError] = useState('');
+  // The first staff account is the main one: it adds and removes everyone else.
+  const main = db.admins[0];
+  const isMain = !!main && main.id === session.adminId;
 
   async function add(e: FormEvent) {
     e.preventDefault();
@@ -56,10 +59,10 @@ function AdminAccounts() {
         {db.admins.map((a) => (
           <li key={a.id} className="admin-row">
             <div className="row-main">
-              <span className="row-name">{a.name || a.email}{a.id === session.adminId ? ' (you)' : ''}</span>
+              <span className="row-name">{a.name || a.email}{a.id === session.adminId ? ' (you)' : ''}{a.id === main?.id ? ', main account' : ''}</span>
               <span className="row-meta">{a.email}</span>
             </div>
-            {a.id !== session.adminId && (
+            {isMain && a.id !== session.adminId && (
               <div className="row-actions">
                 <button type="button" className="btn btn-small btn-ghost danger" onClick={() => window.confirm(`Remove staff access for ${a.email}?`) && updateDB((d) => (d.admins = d.admins.filter((x) => x.id !== a.id)))}>
                   Remove access
@@ -69,14 +72,17 @@ function AdminAccounts() {
           </li>
         ))}
       </ul>
-      {db.admins.length < MAX_ADMINS && (
+      {isMain ? (
         <form className="fields fields-inline" onSubmit={add}>
-          <h3 className="h-sub">Add the second staff account</h3>
+          <h3 className="h-sub">Give someone staff access</h3>
+          <p className="fine" style={{ gridColumn: '1 / -1', margin: 0 }}>They sign in at Staff login with this email and password, on any device, and get the full admin panel.</p>
           <label>Name<input required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
           <label>Email<input required type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>
           <label>Password<input required type="password" autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
           <button type="submit" className="btn btn-primary btn-small">Add staff account</button>
         </form>
+      ) : (
+        <p className="fine">Only the main account ({main?.email}) can add or remove staff.</p>
       )}
       <form className="fields fields-inline" onSubmit={changePw}>
         <h3 className="h-sub">Change your password</h3>

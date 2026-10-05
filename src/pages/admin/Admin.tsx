@@ -47,7 +47,7 @@ function AdminLogin() {
   return (
     <div className="wrap page narrow-page">
       <h1 className="h-display">{firstRun ? 'Set up staff access' : 'Staff login'}</h1>
-      {firstRun && <p className="lead">Create the first admin account. You can add one more (for the owner or a manager) under Settings after you sign in.</p>}
+      {firstRun && <p className="lead">Create the main admin account. After you sign in, you can give anyone else staff access under Settings.</p>}
       <form className="fields" onSubmit={submit}>
         {firstRun && (
           <label>

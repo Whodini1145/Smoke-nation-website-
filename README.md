@@ -1,6 +1,6 @@
 # Smoke Nation website
 
-Online shop for Smoke Nation, 420 Pine St, Frankston, TX: THCA flower and nicotine vapes, with in-store pickup or shipping, optional customer accounts, and an admin panel for the two staff accounts.
+Online shop for Smoke Nation, 420 Pine St, Frankston, TX: THCA flower and nicotine vapes, with in-store pickup or shipping, optional customer accounts, and an admin panel. The first staff account is the main one and can give other people staff access.
 
 See `SPEC.md` for the full plan and every decision made so far.
 

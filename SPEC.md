@@ -14,7 +14,12 @@ These decisions were made after the original spec and **override it where they c
 - Hosting/backend left to the developer: **Supabase** (database, auth, photo storage) + **Vercel** (hosting).
 - Keep the prototype's overall vibe and color palette, but the final site must look **much more polished and unique** — the prototype is a basic rough draft.
 
-### Admin accounts
+### Admin accounts (updated 2026-10-05)
+- The first account made at Staff login is the **main admin**. Staff sign-up then closes.
+- The main admin can give **any number** of other people staff access (Admin → Settings → Staff accounts: name, email, password) and remove it. Other staff get the full admin panel but can't add/remove staff.
+- Admin access belongs to the account, not the device: on the live site (Supabase Auth) signing in on any phone or laptop gives the same admin access.
+
+### Admin accounts (original)
 - **Two admin accounts**: the site manager (cousin of the owner) and the owner. Each sets their own password. No hardcoded/shared password.
 
 ### Cart & checkout
