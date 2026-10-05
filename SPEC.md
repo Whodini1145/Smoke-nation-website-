@@ -73,6 +73,20 @@ These decisions were made after the original spec and **override it where they c
 - Spot for a **photo of the real storefront**.
 - Store **hours and address** — pull from the flyer when provided (flyer itself doesn't need to be displayed).
 
+### Design direction (added 2026-10-05)
+- The prototype is only a guideline for features/layout. The final site must look **way different and unique** — it currently reads as plain, basic, boring.
+- Use **background pictures and visual layering** to make the site pop (not flat white boxes everywhere), while keeping the trustworthy light base + green brand palette.
+- Inspiration sites: **moodhemp / mood.com** and **geekbar.com** — big, high-quality product photography and bold presentation.
+- Follow the `frontend-design` skill in `.claude/skills/frontend-design/`.
+
+### Product photos (added 2026-10-05)
+- Use **official product photos** for vapes rather than counter photos. Smoke Nation buys wholesale from Geek Bar and **has permission to use Geek Bar's product images**.
+- Foger image permission: not yet confirmed — ask.
+- Owner will send: **logo file** (high-res), **storefront photos**, flyer (hours/address).
+
+### Catalog confirmation (added 2026-10-05)
+- **Geek Bar Mate Kit 60K** and **Geek Bar Mate Pod 60K** are both sold. The pod is sold standalone in store even though Geek Bar's site doesn't list it separately (their site is wholesale-facing).
+
 ### Still to be decided
 - Shipping cost model, minimum order, payment processor, order notifications (email/text), domain name, admin link final placement.
 
