@@ -12,7 +12,10 @@ export default function About() {
         <div className="about-grid">
           <div className="about-text">
             {settings.aboutBody.split(/\n\s*\n/).map((para, i) => (
-              <p key={i}>{para}</p>
+              <p key={i}>
+                {/* **double stars** around words make them bold */}
+                {para.split(/\*\*(.+?)\*\*/g).map((part, j) => (j % 2 ? <strong key={j}>{part}</strong> : part))}
+              </p>
             ))}
           </div>
           <div className="about-photos">

@@ -142,7 +142,7 @@ export default function SettingsTab() {
       <section className="admin-section">
         <h2 className="h-section">About us page</h2>
         <label><span className="field-label">Heading</span><input value={s.aboutTitle} onChange={(e) => set({ aboutTitle: e.target.value })} /></label>
-        <label><span className="field-label">Story (leave a blank line between paragraphs)</span><textarea rows={10} value={s.aboutBody} onChange={(e) => set({ aboutBody: e.target.value })} /></label>
+        <label><span className="field-label">Story (blank line between paragraphs; put **double stars** around words to make them bold)</span><textarea rows={10} value={s.aboutBody} onChange={(e) => set({ aboutBody: e.target.value })} /></label>
       </section>
 
       <AdminAccounts />

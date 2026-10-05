@@ -2,6 +2,7 @@ import storefront from '../assets/storefront.jpg';
 import flowerJars from '../assets/flower-jars.jpg';
 import vapeWall from '../assets/vape-wall.jpg';
 import slideFoger from '../assets/slide-foger.jpg';
+import geekbarCase from '../assets/geekbar-case.jpg';
 import slidePulseX2 from '../assets/slide-pulse-x2.jpg';
 
 // Official product photos from Geek Bar (geekbar.com) and Foger (fogertech.com).
@@ -128,7 +129,7 @@ export function createSeed(): DB {
       { id: 's-foger', photo: slideFoger, caption: 'Foger Switch Pro pods, 30K puffs', link: '/shop/vapes/foger-pods', linkLabel: 'Shop Foger' },
       { id: 's-pulse', photo: slidePulseX2, caption: 'Geek Bar Pulse X 2, 50K puffs', link: '/shop/vapes/gb-x2-50', linkLabel: 'Shop Geek Bar' },
       { id: 's-vapes', photo: vapeWall, caption: 'Foger and Geek Bar, every flavor we stock', link: '/shop/vapes', linkLabel: 'Shop vapes' },
-      { id: 's-brand', caption: 'Smoke Nation', brand: true },
+      { id: 's-case', photo: geekbarCase, caption: 'Every Geek Bar flavor, behind the glass', link: '/shop/vapes/gb-x2-25', linkLabel: 'Shop Geek Bar' },
     ],
     reviews: [
       { id: 'r1', name: 'Sample reviewer', stars: 5, text: 'Placeholder review. Paste a real review from your Google listing in Admin → Home screen.' },
@@ -169,7 +170,7 @@ export function createSeed(): DB {
       ],
       aboutTitle: 'A family shop on Pine Street',
       aboutBody: [
-        'Smoke Nation started in 2022 with one idea from our owner, Elvis Fernandes: Frankston deserved a smoke shop that felt like a neighbor, not a gas-station counter. He painted the building red, white and blue, put two picnic tables out front, and filled the shelves with the stuff people were driving to Tyler to find.',
+        'Smoke Nation started in 2022 with one idea from our owner, **Elvis Fernandes**: Frankston deserved a smoke shop that felt like a neighbor, not a gas-station counter. He painted the building red, white and blue, put two picnic tables out front, and filled the shelves with the stuff people were driving to Tyler to find.',
         'It is still a family operation. Elvis runs the shop, his cousin helps keep the shelves and this website stocked, and most days you will be talking to one of us. We learn names, we remember what you liked last time, and if you find a lower price somewhere else, bring the receipt and we will match it.',
         'This site is the same shop, open later. Pick out your flower or your flavor, pay online, and grab it at the counter — or have it shipped where we can. Either way, it comes from the same jars and the same wall you would see if you walked in.',
       ].join('\n\n'),
