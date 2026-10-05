@@ -1,7 +1,8 @@
 # Smoke Nation — Website Spec & Planning Notes
 
-> **Status:** Planning only. The website has NOT been built yet. Do not start building until the owner says "go".
-> Waiting on: `smoke-nation-prototype.html` (rough-draft prototype), the logo file, and the store flyer (hours/address).
+> **Status (2026-10-05):** First pass built — full storefront, cart/checkout, accounts and admin panel, running on sample data in the browser. See README.md.
+> Next: owner review of the preview, then connect Supabase + Vercel, then payment processor.
+> Store hours (from flyer): Mon–Thu 10am–8pm, Fri–Sat 10am–9pm, Sun 12pm–8pm. Address: 420 Pine St, Frankston, TX 75763. In-store policy: price match with a receipt.
 
 ---
 
