@@ -3,6 +3,7 @@ import { updateDB, useDB } from '../../data/store';
 import type { OrderStatus } from '../../data/types';
 import { money2 } from '../../lib/pricing';
 import { OrderItems, OrderTotals, STATUS_TEXT } from '../Account';
+import { AGE_CHECK_TEXT } from '../../lib/ageCheck';
 
 const FILTERS: { id: 'open' | 'all' | OrderStatus; label: string }[] = [
   { id: 'open', label: 'Open' },
@@ -57,6 +58,9 @@ export default function OrdersTab() {
                       {o.address.city}, {o.address.state} {o.address.zip}
                     </p>
                   )}
+                  <p className={`tag ${o.ageCheck === 'passed' ? 'tag-deal' : o.ageCheck === 'failed' ? 'tag-out' : 'tag-low'}`} style={{ justifySelf: 'start' }}>
+                    {AGE_CHECK_TEXT[o.ageCheck ?? 'not_connected']}. Check ID at pickup or delivery.
+                  </p>
                   {o.note && <p className="notice notice-quiet">Note: {o.note}</p>}
                 </div>
                 <OrderItems order={o} />

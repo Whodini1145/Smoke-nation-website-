@@ -151,6 +151,7 @@ export interface Order {
   total: number;
   status: OrderStatus;
   note?: string;
+  ageCheck?: 'passed' | 'failed' | 'not_connected';
 }
 
 export interface Account {

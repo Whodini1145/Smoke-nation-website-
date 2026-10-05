@@ -5,6 +5,7 @@ import type { Fulfillment, Order } from '../data/types';
 import { lineLabel } from '../lib/catalog';
 import { money, money2, priceCart } from '../lib/pricing';
 import { clearCart } from '../lib/util';
+import { AGE_CHECK_CONNECTED, verifyAge } from '../lib/ageCheck';
 import { Summary } from './Cart';
 
 export default function Checkout() {
@@ -35,11 +36,13 @@ export default function Checkout() {
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
-  function placeOrder(e: FormEvent) {
+  async function placeOrder(e: FormEvent) {
     e.preventDefault();
     setError('');
     if (t.belowMinimum > 0) return setError(`The minimum order is ${money(db.settings.minOrder)}. Add ${money2(t.belowMinimum)} more to check out.`);
     if (!ageOk) return setError('Confirm you are 21 or older to place the order.');
+    const ageCheck = await verifyAge({ name: form.name, email: form.email, phone: form.phone });
+    if (ageCheck === 'failed') return setError('We couldn’t verify your age, so this order can’t be placed. You can still shop in store with a valid ID.');
     const latest = getDB();
     const order: Order = {
       id: uid('o'),
@@ -67,6 +70,7 @@ export default function Checkout() {
       tax: t.tax,
       total: t.total,
       status: 'new',
+      ageCheck,
       note: form.note.trim() || undefined,
     };
     updateDB((d) => {
@@ -150,9 +154,11 @@ export default function Checkout() {
           )}
 
           <fieldset className="fields">
-            <legend className="h-section">Payment</legend>
+            <legend className="h-section">ID check and payment</legend>
             <p className="notice notice-quiet">
-              Card payment connects here once the shop's payment processor is set up. In this preview, placing an order saves it without charging anything.
+              {AGE_CHECK_CONNECTED
+                ? 'When you place your order, you’ll confirm your ID with our age check partner, then pay.'
+                : 'Online ID check and card payment connect here once the shop picks its providers. In this preview, placing an order saves it without checking ID or charging anything.'}
             </p>
             <label>
               Note for the shop (optional)

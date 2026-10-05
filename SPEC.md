@@ -98,6 +98,14 @@ These decisions were made after the original spec and **override it where they c
 ### Catalog confirmation (added 2026-10-05)
 - **Geek Bar Mate Kit 60K** and **Geek Bar Mate Pod 60K** are both sold. The pod is sold standalone in store even though Geek Bar's site doesn't list it separately (their site is wholesale-facing).
 
+### Online ID check (added 2026-10-05)
+- Required before payment (Texas law; federal PACT Act for shipped vapes). Will use a third-party age-verification service, likely bundled with the payment processor.
+- The site has the slot ready: `src/lib/ageCheck.ts` (`verifyAge`). Checkout waits on it before placing the order and saves the result on the order; Admin → Orders shows it. Staff still check ID at pickup.
+
+### Hosting notes (checked 2026-10-05)
+- Vercel: allows legal products, but the free Hobby plan is for personal, non-commercial sites. A store needs Vercel Pro (about $20/month).
+- Supabase: its acceptable use policy bans selling "controlled substances" and "drug paraphernalia". Hemp THCA is legal under hemp law but a gray area, so there is some risk of the account being flagged. Owner to decide.
+
 ### Still to be decided
 - Shipping cost model, minimum order, payment processor, order notifications (email/text), domain name, admin link final placement.
 
