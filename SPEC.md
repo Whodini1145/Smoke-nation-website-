@@ -85,6 +85,11 @@ These decisions were made after the original spec and **override it where they c
 - Foger image permission: not yet confirmed — ask.
 - Owner will send: **logo file** (high-res), **storefront photos**, flyer (hours/address).
 
+### Product photos and Geek Bar names (added 2026-10-05)
+- Vape product photos now come from the official brand sites: geekbar.com and fogertech.com (Foger's official site; foger.com points there).
+- Geek Bar's own site calls the 25K device **Pulse X** and the 50K device **Pulse X 2**. Lines renamed to "Pulse X 25K" and "Pulse X 2 50K" to match. Confirm with the owner.
+- Foger image permission still to confirm with the Foger distributor (Geek Bar permission confirmed).
+
 ### Catalog confirmation (added 2026-10-05)
 - **Geek Bar Mate Kit 60K** and **Geek Bar Mate Pod 60K** are both sold. The pod is sold standalone in store even though Geek Bar's site doesn't list it separately (their site is wholesale-facing).
 

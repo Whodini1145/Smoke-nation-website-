@@ -2,7 +2,7 @@ import type { CategoryId, DB, Line } from '../data/types';
 
 export const CATEGORY_NAMES: Record<CategoryId, string> = { flower: 'THCA Flower', vapes: 'Vapes' };
 
-/** "Pulse X2 25K" → "Geek Bar Pulse X2 25K"; "Foger Pods 30K" stays as is. */
+/** "Pulse X 25K" → "Geek Bar Pulse X 25K"; "Foger Pods 30K" stays as is. */
 export function lineLabel(line: Line): string {
   return line.brand && !line.name.startsWith(line.brand) ? `${line.brand} ${line.name}` : line.name;
 }

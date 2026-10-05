@@ -1,6 +1,12 @@
 import storefront from '../assets/storefront.jpg';
 import flowerJars from '../assets/flower-jars.jpg';
 import vapeWall from '../assets/vape-wall.jpg';
+import slideFoger from '../assets/slide-foger.jpg';
+import slidePulseX2 from '../assets/slide-pulse-x2.jpg';
+
+// Official product photos from Geek Bar (geekbar.com) and Foger (fogertech.com).
+const photos = import.meta.glob<string>('../assets/products/*.webp', { eager: true, import: 'default' });
+const photo = (name: string) => photos[`../assets/products/${name}.webp`];
 import type { DB, Line, Product, SizePrices } from './types';
 
 // Starting content. Product names and every price below are placeholders so the
@@ -15,8 +21,8 @@ const lines: Line[] = [
   { id: 'greenhouse', category: 'flower', name: 'Greenhouse', potency: 1, sort: 4 },
   { id: 'foger-pods', category: 'vapes', brand: 'Foger', name: 'Foger Pods 30K', sort: 1 },
   { id: 'foger-battery', category: 'vapes', brand: 'Foger', name: 'Foger Battery', sort: 2 },
-  { id: 'gb-x2-25', category: 'vapes', brand: 'Geek Bar', name: 'Pulse X2 25K', sort: 3 },
-  { id: 'gb-x2-50', category: 'vapes', brand: 'Geek Bar', name: 'Pulse X2 50K', sort: 4 },
+  { id: 'gb-x2-25', category: 'vapes', brand: 'Geek Bar', name: 'Pulse X 25K', sort: 3 },
+  { id: 'gb-x2-50', category: 'vapes', brand: 'Geek Bar', name: 'Pulse X 2 50K', sort: 4 },
   { id: 'gb-mate-kit', category: 'vapes', brand: 'Geek Bar', name: 'Mate Kit 60K', sort: 5 },
   { id: 'gb-mate-pod', category: 'vapes', brand: 'Geek Bar', name: 'Mate Pod 60K', sort: 6 },
 ];
@@ -78,20 +84,32 @@ const products: Product[] = [
   flower('greenhouse', 'Sample Greenhouse One', 96, 55, 35),
   flower('greenhouse', 'Sample Greenhouse Two', 24, 38, 40, { status: 'out' }),
 
-  vape('foger-pods', 'Sour Apple Ice', 20, 96, 55, 45, { bestSeller: true }),
-  vape('foger-pods', 'Strawberry Ice', 20, 330, 72, 45),
-  vape('foger-pods', 'Strawberry Cupcake', 20, 330, 72, 30),
-  vape('foger-pods', 'Frozen Watermelon', 20, 2, 72, 45, { bestSeller: true }),
-  vape('foger-pods', 'Strawberry Mango', 20, 26, 88, 45),
-  vape('foger-pods', 'Cool Mint', 20, 174, 58, 40, { status: 'low' }),
-  vape('foger-battery', 'Foger Battery', 15, 0, 0, 55, { description: 'Rechargeable base for Foger 30K pods.' }),
-  vape('gb-x2-25', 'Blue Razz Ice', 22, 214, 72, 50, { bestSeller: true }),
-  vape('gb-x2-25', 'Watermelon Ice', 22, 2, 72, 45),
-  vape('gb-x2-25', 'Peach Ice', 22, 26, 88, 35),
-  vape('gb-x2-50', 'Miami Mint', 28, 174, 58, 45),
-  vape('gb-x2-50', 'Grape Ice', 28, 272, 55, 55, { onSale: true, salePrice: 24 }),
-  vape('gb-mate-kit', 'Mate Kit 60K', 30, 0, 0, 65, { description: 'Battery and one pod, 60K puffs.' }),
-  vape('gb-mate-pod', 'Mate Pod 60K', 22, 214, 72, 40, { description: 'Pod only — fits the Mate battery.' }),
+  vape('foger-pods', 'Strawberry Ice', 20, 272, 55, 30, { photo: photo('foger-strawberry-ice'), bestSeller: true }),
+  vape('foger-pods', 'Strawberry Cupcake', 20, 2, 72, 40, { photo: photo('foger-strawberry-cupcake') }),
+  vape('foger-pods', 'Frozen Watermelon', 20, 330, 72, 30, { photo: photo('foger-frozen-watermelon'), bestSeller: true }),
+  vape('foger-pods', 'Strawberry Mango', 20, 26, 88, 35, { photo: photo('foger-strawberry-mango') }),
+  vape('foger-pods', 'Miami Mint', 20, 174, 58, 40, { photo: photo('foger-miami-mint') }),
+  vape('foger-pods', 'Cola Slush', 20, 2, 72, 45, { photo: photo('foger-cola-slush') }),
+  vape('foger-pods', 'Grape Slush', 20, 272, 55, 45, { photo: photo('foger-grape-slush'), status: 'low' }),
+  vape('foger-pods', 'Frozen Blueberry', 20, 214, 72, 45, { photo: photo('foger-frozen-blueberry') }),
+  vape('foger-battery', 'Switch Pro Battery', 15, 214, 72, 30, { photo: photo('foger-battery'), description: 'Rechargeable 1200mAh base for Foger 30K pods.' }),
+  vape('gb-x2-25', 'Blue Razz Ice', 22, 214, 72, 40, { photo: photo('px-blue-razz-ice'), bestSeller: true }),
+  vape('gb-x2-25', 'Watermelon Ice', 22, 330, 72, 35, { photo: photo('px-watermelon-ice') }),
+  vape('gb-x2-25', 'Miami Mint', 22, 0, 0, 35, { photo: photo('px-miami-mint') }),
+  vape('gb-x2-25', 'Sour Apple Ice', 22, 96, 55, 35, { photo: photo('px-sour-apple-ice') }),
+  vape('gb-x2-25', 'Strawberry B-Pop', 22, 330, 72, 30, { photo: photo('px-strawberry-b-pop') }),
+  vape('gb-x2-25', 'Blackberry B-Pop', 22, 272, 55, 35, { photo: photo('px-blackberry-b-pop') }),
+  vape('gb-x2-50', 'Orange Fcuking Fab', 28, 26, 88, 60, { photo: photo('x2-orange-fcuking-fab'), bestSeller: true }),
+  vape('gb-x2-50', 'Strawberry B-Burst', 28, 330, 72, 60, { photo: photo('x2-strawberry-b-burst') }),
+  vape('gb-x2-50', 'Blue Rancher', 28, 214, 72, 60, { photo: photo('x2-blue-rancher') }),
+  vape('gb-x2-50', 'Grape Slush', 28, 272, 55, 60, { photo: photo('x2-grape-slush'), onSale: true, salePrice: 24 }),
+  vape('gb-x2-50', 'Peach Slush', 28, 330, 72, 55, { photo: photo('x2-peach-slush') }),
+  vape('gb-x2-50', 'Watermelon Crush', 28, 2, 72, 60, { photo: photo('x2-watermelon-crush') }),
+  vape('gb-mate-kit', 'Strawberry Kiwi Kit', 30, 330, 72, 25, { photo: photo('mate-strawberry-kiwi'), description: 'Battery and one pod, 60K puffs.' }),
+  vape('gb-mate-kit', 'Blueberry Yummy Kit', 30, 214, 72, 25, { photo: photo('mate-blueberry-yummy'), description: 'Battery and one pod, 60K puffs.' }),
+  vape('gb-mate-pod', 'Peach Mango Watermelon', 22, 47, 92, 30, { photo: photo('mate-peach-mango-watermelon'), description: 'Pod only. Fits the Mate battery.' }),
+  vape('gb-mate-pod', 'White Peach Raspberry', 22, 330, 72, 25, { photo: photo('mate-white-peach-raspberry'), description: 'Pod only. Fits the Mate battery.' }),
+  vape('gb-mate-pod', 'Strawberry Mint Candy', 22, 174, 58, 25, { photo: photo('mate-strawberry-mint-candy'), description: 'Pod only. Fits the Mate battery.' }),
 ];
 
 const fogerPodIds = products.filter((p) => p.lineId === 'foger-pods').map((p) => p.id);
@@ -107,6 +125,8 @@ export function createSeed(): DB {
     slides: [
       { id: 's-store', photo: storefront, caption: 'Order online, pick up at the shop', link: '/about', linkLabel: 'Find the shop' },
       { id: 's-flower', photo: flowerJars, caption: 'THCA flower in four tiers', link: '/shop/flower', linkLabel: 'Shop flower' },
+      { id: 's-foger', photo: slideFoger, caption: 'Foger Switch Pro pods, 30K puffs', link: '/shop/vapes/foger-pods', linkLabel: 'Shop Foger' },
+      { id: 's-pulse', photo: slidePulseX2, caption: 'Geek Bar Pulse X 2, 50K puffs', link: '/shop/vapes/gb-x2-50', linkLabel: 'Shop Geek Bar' },
       { id: 's-vapes', photo: vapeWall, caption: 'Foger and Geek Bar, every flavor we stock', link: '/shop/vapes', linkLabel: 'Shop vapes' },
       { id: 's-brand', caption: 'Smoke Nation', brand: true },
     ],
@@ -122,8 +142,8 @@ export function createSeed(): DB {
       { id: 't-greenhouse', category: 'flower', label: 'Greenhouse', lineId: 'greenhouse', hue: 174, saturation: 58, intensity: 40 },
       { id: 't-foger-pods', category: 'vapes', label: 'Foger Pods', lineId: 'foger-pods', hue: 330, saturation: 72, intensity: 45 },
       { id: 't-foger-battery', category: 'vapes', label: 'Foger Battery', lineId: 'foger-battery', hue: 0, saturation: 0, intensity: 50 },
-      { id: 't-x2-25', category: 'vapes', label: 'Pulse X2 25K', lineId: 'gb-x2-25', hue: 214, saturation: 72, intensity: 50 },
-      { id: 't-x2-50', category: 'vapes', label: 'Pulse X2 50K', lineId: 'gb-x2-50', hue: 272, saturation: 55, intensity: 50 },
+      { id: 't-x2-25', category: 'vapes', label: 'Pulse X 25K', lineId: 'gb-x2-25', hue: 214, saturation: 72, intensity: 50 },
+      { id: 't-x2-50', category: 'vapes', label: 'Pulse X 2 50K', lineId: 'gb-x2-50', hue: 272, saturation: 55, intensity: 50 },
       { id: 't-mate-kit', category: 'vapes', label: 'Mate Kit 60K', lineId: 'gb-mate-kit', hue: 2, saturation: 72, intensity: 45 },
       { id: 't-mate-pod', category: 'vapes', label: 'Mate Pod 60K', lineId: 'gb-mate-pod', hue: 26, saturation: 88, intensity: 45 },
     ],

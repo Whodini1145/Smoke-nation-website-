@@ -6,8 +6,8 @@ import type { CartLine, DB } from './types';
 // site can be clicked through before the real database exists. When Supabase is
 // connected, `getDB`/`updateDB` are the only functions that need to change.
 
-const DB_KEY = 'sn-db-v1';
-const CART_KEY = 'sn-cart-v1';
+const DB_KEY = 'sn-db-v2';
+const CART_KEY = 'sn-cart-v2';
 const SESSION_KEY = 'sn-session-v1';
 
 type Listener = () => void;
