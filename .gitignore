@@ -5,3 +5,4 @@ preview-dist
 .DS_Store
 screenshots
 *.tsbuildinfo
+smoke-nation-preview.html
