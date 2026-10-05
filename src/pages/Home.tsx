@@ -4,13 +4,13 @@ import flowerJars from '../assets/flower-jars.jpg';
 import vapeWall from '../assets/vape-wall.jpg';
 import storefront from '../assets/storefront.jpg';
 import { Carousel } from '../components/Carousel';
-import { ClockIcon, PinIcon, ShieldIcon, StarIcon } from '../components/Icons';
-import { ProductCard } from '../components/ProductCard';
+import { CheckIcon, ClockIcon, PinIcon, ShieldIcon, StarIcon } from '../components/Icons';
+import { ProductArt, ProductCard } from '../components/ProductCard';
 import { ProductSheet } from '../components/ProductSheet';
 import { SearchBox } from '../components/Search';
 import { useDB } from '../data/store';
 import type { Product } from '../data/types';
-import { lineLabel } from '../lib/catalog';
+import { brandsOf, lineLabel, linesOf } from '../lib/catalog';
 import { dealLabel } from '../lib/pricing';
 
 export function Stars({ value, size = 16 }: { value: number; size?: number }) {
@@ -20,6 +20,25 @@ export function Stars({ value, size = 16 }: { value: number; size?: number }) {
         <StarIcon key={i} size={size} filled={i <= Math.round(value)} />
       ))}
     </span>
+  );
+}
+
+/** A strip of brush-stroke "tape" with the shop's promises, drifting sideways. */
+function Tape({ items }: { items: string[] }) {
+  const row = items.map((t, i) => (
+    <span key={i} className="tape-item">
+      <CheckIcon /> {t}
+    </span>
+  ));
+  return (
+    <div className="tape-clip">
+      <div className="tape" role="note" aria-label={items.join('. ')}>
+        <div className="tape-track" aria-hidden="true">
+          <span className="tape-run">{row}</span>
+          <span className="tape-run">{row}</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -72,6 +91,10 @@ export default function Home() {
   const best = db.products.filter((p) => p.bestSeller && p.status !== 'out');
   const deals = db.deals.filter((d) => d.active && d.productIds.some((id) => db.products.some((p) => p.id === id)));
   const flowerTiers = db.lines.filter((l) => l.category === 'flower').length;
+  const vapeLines = linesOf(db, 'vapes');
+  const brands = brandsOf(vapeLines)
+    .map((name) => ({ name, lines: vapeLines.filter((l) => (l.brand ?? 'Other') === name) }))
+    .filter((b) => b.lines.length);
 
   return (
     <>
@@ -100,6 +123,29 @@ export default function Home() {
           </div>
         </section>
 
+      </div>
+
+      <Tape items={['Order online, pick up on Pine St', 'We price match with a receipt', 'Open 7 days a week', 'Foger and Geek Bar in stock', '21+ with valid ID']} />
+
+      <div className="wrap">
+        <section className="section">
+          <h2 className="h-display">Shop by brand</h2>
+          <div className="brands">
+            {brands.map((b) => (
+              <div key={b.name} className={`brand-tile brand-${b.name.toLowerCase().replace(/\W+/g, '')}`}>
+                <Link to={`/shop/vapes/${b.lines[0].id}`} className="brand-name">{b.name}</Link>
+                <div className="brand-lines">
+                  {b.lines.map((l) => (
+                    <Link key={l.id} to={`/shop/vapes/${l.id}`} className="brand-line">
+                      {l.name.startsWith(b.name) ? l.name.slice(b.name.length).trim() : l.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {deals.length > 0 && (
           <section className="section">
             <h2 className="h-display">Deals right now</h2>
@@ -112,8 +158,12 @@ export default function Home() {
                 return (
                   <Link key={d.id} to={first ? `/shop/${first.category}/${lineIds.length === 1 ? first.id : 'deals'}` : '/shop/vapes'} className="deal-banner">
                     <span className="deal-big">{dealLabel(d)}</span>
-                    <span className="deal-where">
-                      on {where}. Mix and match flavors.
+                    <span className="deal-where">on {where}. Mix and match flavors.</span>
+                    <span className="deal-items" aria-hidden="true">
+                      {items.slice(0, 5).map((p) => (
+                        <ProductArt key={p.id} product={{ ...p, status: 'in' }} category="vapes" />
+                      ))}
+                      {items.length > 5 && <span className="deal-more">+{items.length - 5}</span>}
                     </span>
                   </Link>
                 );
@@ -121,20 +171,22 @@ export default function Home() {
             </div>
           </section>
         )}
+      </div>
 
-        {best.length > 0 && (
-          <section className="section">
-            <div className="section-head">
-              <h2 className="h-display">Best sellers</h2>
-            </div>
+      {best.length > 0 && (
+        <section className="band band-best">
+          <div className="wrap">
+            <h2 className="h-display">Best sellers</h2>
             <div className="row-scroll">
               {best.map((p) => (
                 <ProductCard key={p.id} product={p} line={lineOf(p)} deals={db.deals} onOpen={() => setOpen(p)} showLine />
               ))}
             </div>
-          </section>
-        )}
+          </div>
+        </section>
+      )}
 
+      <div className="wrap">
         {(db.reviews.length > 0 || db.settings.reviewCount > 0) && (
           <section className="section">
             <h2 className="h-display">What people are saying</h2>

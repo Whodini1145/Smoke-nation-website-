@@ -1,7 +1,7 @@
-import type { Deal, Line, Product } from '../data/types';
+import type { Deal, FlowerSize, Line, Product } from '../data/types';
 import { FLOWER_DISCLAIMER } from '../data/seed';
 import { cardBackground, edgeColor } from '../lib/color';
-import { dealLabel, dealsFor, fromPrice, isDiscounted, money, regularPrice } from '../lib/pricing';
+import { dealLabel, dealsFor, isDiscounted, money, regularPrice, unitPrice } from '../lib/pricing';
 import { TagIcon } from './Icons';
 import { lineLabel } from '../lib/catalog';
 
@@ -57,25 +57,32 @@ export function ProductArt({ product, category }: { product: Product; category: 
 }
 
 export function PriceTag({ product }: { product: Product }) {
-  const isFlower = !!product.sizePrices;
-  const now = fromPrice(product);
+  // Flower shows its cheapest size ("from"); vapes show their one price.
+  const sizes = product.sizePrices ? (Object.keys(product.sizePrices) as FlowerSize[]) : [undefined];
+  let size: FlowerSize | undefined;
+  let now: number | undefined;
+  for (const s of sizes) {
+    const p = unitPrice(product, s);
+    if (p !== undefined && (now === undefined || p < now)) {
+      now = p;
+      size = s;
+    }
+  }
   if (now === undefined) return <span className="price">Price coming soon</span>;
-  if (isFlower) {
-    const onSale = Object.keys(product.sizePrices ?? {}).some((s) => isDiscounted(product, s as never));
+  const from = product.sizePrices ? <span className="from">from </span> : null;
+  if (!isDiscounted(product, size)) {
     return (
-      <span className={`price${onSale ? ' price-sale' : ''}`}>
-        <span className="from">from</span> {money(now)}
-        {onSale && <span className="sale-flag">Sale</span>}
+      <span className="price">
+        {from}
+        {money(now)}
       </span>
     );
   }
-  const reg = regularPrice(product)!;
-  return isDiscounted(product) ? (
-    <span className="price price-sale">
-      <s>{money(reg)}</s> {money(now)}
+  return (
+    <span className="price">
+      {from}
+      <s className="was">{money(regularPrice(product, size)!)}</s> <span className="sale-flag">Sale</span> <span className="now">{money(now)}</span>
     </span>
-  ) : (
-    <span className="price">{money(now)}</span>
   );
 }
 

@@ -60,3 +60,6 @@ export const PlusIcon = ({ size = 18 }: P) => (
 export const ShieldIcon = ({ size, className }: P) => (
   <svg {...base(size)} className={className}><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg>
 );
+export const CheckIcon = ({ size = 18, className }: P) => (
+  <svg {...base(size)} className={className} strokeWidth={2.6}><path d="M4.5 12.5l5 5 10-11" /></svg>
+);
