@@ -4,7 +4,7 @@ import { showToast } from '../../components/Overlay';
 import { uid, updateDB, useDB } from '../../data/store';
 import type { Deal, DealKind } from '../../data/types';
 import { cardBackground } from '../../lib/color';
-import { linesOf } from '../../lib/catalog';
+import { byShelfOrder, linesOf } from '../../lib/catalog';
 import { dealLabel, money } from '../../lib/pricing';
 import { LineNav, type LineSel } from './LineNav';
 import { MoneyInput, confirmDelete } from './shared';
@@ -19,7 +19,7 @@ function DealEditor({ initial, isNew, onDone }: { initial: Deal; isNew: boolean;
   });
   const [error, setError] = useState('');
   const picked = new Set(d.productIds);
-  const lineProducts = db.products.filter((p) => p.lineId === sel.lineId).sort((a, b) => a.name.localeCompare(b.name));
+  const lineProducts = db.products.filter((p) => p.lineId === sel.lineId).sort(byShelfOrder);
   const allOn = lineProducts.length > 0 && lineProducts.every((p) => picked.has(p.id));
   const counts = Object.fromEntries(db.lines.map((l) => [l.id, db.products.filter((p) => p.lineId === l.id && picked.has(p.id)).length]));
 

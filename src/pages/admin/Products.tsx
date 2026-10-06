@@ -3,15 +3,53 @@ import { ProductCard } from '../../components/ProductCard';
 import { showToast } from '../../components/Overlay';
 import { uid, updateDB, useDB } from '../../data/store';
 import { FLOWER_DISCLAIMER } from '../../data/seed';
-import { FLOWER_SIZES, type Line, type Product, type SizePrices, type StockStatus } from '../../data/types';
+import { FLOWER_SIZES, type DB, type Line, type Product, type SizePrices, type StockStatus, type Strain } from '../../data/types';
 import { cardBackground } from '../../lib/color';
-import { linesOf } from '../../lib/catalog';
+import { byShelfOrder, linesOf, STRAIN_NAMES, STRAINS } from '../../lib/catalog';
 import { fromPrice, isDiscounted, money } from '../../lib/pricing';
 import { isCounted, setStock, stockText } from '../../lib/stock';
 import { ColorPicker, MoneyInput, PhotoField, confirmDelete } from './shared';
 import { LineNav, type LineSel } from './LineNav';
 
 const STATUS_LABEL: Record<StockStatus, string> = { in: 'In stock', low: 'Running low', out: 'Sold out' };
+
+/** Rewrite a line's positions 0..n-1 in the given order. */
+function renumber(d: DB, ordered: string[]) {
+  ordered.forEach((id, i) => {
+    const p = d.products.find((x) => x.id === id);
+    if (p) p.sort = i;
+  });
+}
+
+function lineOrder(d: DB, lineId: string): string[] {
+  return d.products.filter((p) => p.lineId === lineId).sort(byShelfOrder).map((p) => p.id);
+}
+
+/** Move one product up (-1) or down (+1) within its line. */
+function moveOne(id: string, dir: -1 | 1) {
+  updateDB((d) => {
+    const p = d.products.find((x) => x.id === id)!;
+    const ids = lineOrder(d, p.lineId);
+    const i = ids.indexOf(id);
+    const j = i + dir;
+    if (j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    renumber(d, ids);
+  });
+}
+
+/** Move selected products to the top or bottom of their line, keeping their order. */
+function moveMany(ids: string[], where: 'top' | 'bottom') {
+  updateDB((d) => {
+    const lineIds = new Set(d.products.filter((p) => ids.includes(p.id)).map((p) => p.lineId));
+    for (const lineId of lineIds) {
+      const order = lineOrder(d, lineId);
+      const picked = order.filter((x) => ids.includes(x));
+      const rest = order.filter((x) => !ids.includes(x));
+      renumber(d, where === 'top' ? [...picked, ...rest] : [...rest, ...picked]);
+    }
+  });
+}
 
 function blankProduct(line: Line): Product {
   return {
@@ -54,6 +92,10 @@ function ProductEditor({ initial, line, isNew, onDone }: { initial: Product; lin
     if (isFlower && !Object.values(p.sizePrices ?? {}).some((v) => v !== undefined)) return setError('Enter a price for at least one size.');
     if (p.onSale && !isFlower && p.salePrice === undefined) return setError('Enter the sale price, or uncheck "On sale".');
     const clean: Product = { ...p, name: p.name.trim(), description: p.description.trim() };
+    if (clean.sort === undefined || clean.lineId !== initial.lineId) {
+      const sorts = db.products.filter((x) => x.lineId === clean.lineId && x.id !== clean.id).map((x) => x.sort ?? 0);
+      clean.sort = sorts.length ? Math.max(...sorts) + 1 : 0;
+    }
     updateDB((d) => {
       const i = d.products.findIndex((x) => x.id === clean.id);
       if (i >= 0) d.products[i] = clean;
@@ -133,6 +175,17 @@ function ProductEditor({ initial, line, isNew, onDone }: { initial: Product; lin
             </select>
           </label>
         </div>
+        {isFlower && (
+          <label>
+            <span className="field-label">Type</span>
+            <select value={p.strain ?? ''} onChange={(e) => set({ strain: (e.target.value || undefined) as Strain | undefined })}>
+              <option value="">Not set</option>
+              {STRAINS.map((st) => (
+                <option key={st} value={st}>{STRAIN_NAMES[st]}</option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="check">
           <input type="checkbox" checked={p.bestSeller} onChange={(e) => set({ bestSeller: e.target.checked })} />
           <span>Best seller (shows on the home page and the Best sellers tab)</span>
@@ -155,7 +208,7 @@ function ProductEditor({ initial, line, isNew, onDone }: { initial: Product; lin
   );
 }
 
-type BulkAction = 'price' | 'sale' | 'stock' | 'deal' | 'best' | null;
+type BulkAction = 'price' | 'sale' | 'stock' | 'deal' | 'best' | 'order' | 'type' | null;
 
 function BulkBar({ ids, isFlower, onClear }: { ids: string[]; isFlower: boolean; onClear: () => void }) {
   const db = useDB();
@@ -184,6 +237,8 @@ function BulkBar({ ids, isFlower, onClear }: { ids: string[]; isFlower: boolean;
         <button type="button" className={`chip${action === 'stock' ? ' is-on' : ''}`} onClick={() => toggle('stock')}>Stock</button>
         {!isFlower && <button type="button" className={`chip${action === 'deal' ? ' is-on' : ''}`} onClick={() => toggle('deal')}>Deal</button>}
         <button type="button" className={`chip${action === 'best' ? ' is-on' : ''}`} onClick={() => toggle('best')}>Best seller</button>
+        <button type="button" className={`chip${action === 'order' ? ' is-on' : ''}`} onClick={() => toggle('order')}>Order</button>
+        {isFlower && <button type="button" className={`chip${action === 'type' ? ' is-on' : ''}`} onClick={() => toggle('type')}>Type</button>}
         <button
           type="button"
           className="chip chip-danger"
@@ -344,6 +399,24 @@ function BulkBar({ ids, isFlower, onClear }: { ids: string[]; isFlower: boolean;
         </div>
       )}
 
+      {action === 'order' && (
+        <div className="bulk-panel">
+          <button type="button" className="btn btn-ghost btn-small" onClick={() => { moveMany(ids, 'top'); showToast(`Moved ${items} to the top`); setAction(null); }}>Move to top</button>
+          <button type="button" className="btn btn-ghost btn-small" onClick={() => { moveMany(ids, 'bottom'); showToast(`Moved ${items} to the bottom`); setAction(null); }}>Move to bottom</button>
+          <span className="fine">Use the ▲ ▼ arrows on each row to fine-tune.</span>
+        </div>
+      )}
+
+      {action === 'type' && (
+        <div className="bulk-panel">
+          {STRAINS.map((st) => (
+            <button key={st} type="button" className="btn btn-ghost btn-small" onClick={() => apply((p) => (p.strain = st), `Marked ${items} ${STRAIN_NAMES[st]}`)}>
+              {STRAIN_NAMES[st]}
+            </button>
+          ))}
+        </div>
+      )}
+
       {action === 'best' && (
         <div className="bulk-panel">
           <button type="button" className="btn btn-ghost btn-small" onClick={() => apply((p) => (p.bestSeller = true), `Marked ${items} as best sellers`)}>Mark as best sellers</button>
@@ -441,7 +514,7 @@ export default function ProductsTab() {
   const [adding, setAdding] = useState<Product | null>(null);
 
   const line = db.lines.find((l) => l.id === sel.lineId) ?? linesOf(db, sel.category)[0];
-  const products = useMemo(() => (line ? db.products.filter((p) => p.lineId === line.id).sort((a, b) => a.name.localeCompare(b.name)) : []), [db.products, line]);
+  const products = useMemo(() => (line ? db.products.filter((p) => p.lineId === line.id).sort(byShelfOrder) : []), [db.products, line]);
   const counts = useMemo(() => Object.fromEntries(db.lines.map((l) => [l.id, db.products.filter((p) => p.lineId === l.id).length])), [db]);
   const selIds = products.filter((p) => selected.has(p.id)).map((p) => p.id);
   const allOn = products.length > 0 && selIds.length === products.length;
@@ -489,7 +562,7 @@ export default function ProductsTab() {
           {adding && <ProductEditor key={adding.id} initial={adding} line={line} isNew onDone={() => setAdding(null)} />}
 
           <ul className="admin-list">
-            {products.map((p) => {
+            {products.map((p, idx) => {
               const price = fromPrice(p);
               const deals = db.deals.filter((d) => d.productIds.includes(p.id));
               return (
@@ -498,7 +571,13 @@ export default function ProductsTab() {
                     <ProductEditor initial={p} line={line} isNew={false} onDone={() => setEditing(null)} />
                   ) : (
                     <>
-                      <input type="checkbox" className="row-check" checked={selected.has(p.id)} onChange={() => toggleOne(p.id)} aria-label={`Select ${p.name}`} />
+                      <span className="row-lead">
+                        <input type="checkbox" className="row-check" checked={selected.has(p.id)} onChange={() => toggleOne(p.id)} aria-label={`Select ${p.name}`} />
+                        <span className="row-move">
+                          <button type="button" onClick={() => moveOne(p.id, -1)} disabled={idx === 0} aria-label={`Move ${p.name} up`}>▲</button>
+                          <button type="button" onClick={() => moveOne(p.id, 1)} disabled={idx === products.length - 1} aria-label={`Move ${p.name} down`}>▼</button>
+                        </span>
+                      </span>
                       <span className="row-thumb" style={{ background: cardBackground(p.hue, p.saturation, p.intensity) }}>
                         {p.photo && <img src={p.photo} alt="" />}
                       </span>
@@ -507,6 +586,7 @@ export default function ProductsTab() {
                         <span className="row-meta">
                           {price !== undefined ? `${p.sizePrices ? 'from ' : ''}${money(price)}` : 'No price'}
                           {(p.sizePrices ? Object.keys(p.sizePrices).some((s) => isDiscounted(p, s as never)) : isDiscounted(p)) && <span className="tag tag-sale">On sale</span>}
+                          {p.strain && <span className={`tag strain-${p.strain}`}>{STRAIN_NAMES[p.strain]}</span>}
                           {isCounted(p) && <span className="tag tag-count">{stockText(p)}</span>}
                           {p.status !== 'in' && <span className={`tag tag-${p.status}`}>{STATUS_LABEL[p.status]}</span>}
                           {p.bestSeller && <span className="tag">Best seller</span>}

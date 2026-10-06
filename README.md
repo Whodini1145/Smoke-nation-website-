@@ -11,7 +11,8 @@ npm install
 npm run dev            # local dev server
 npm test               # pricing and deal tests
 npm run build          # production build into dist/
-npm run build:preview  # one self-contained HTML file in preview-dist/ to click through on a phone
+npm run build:preview  # database-free copy in preview-dist/ for local testing
+npm run test:rules     # security rules tests (Firestore emulator)
 ```
 
 ## Where things live

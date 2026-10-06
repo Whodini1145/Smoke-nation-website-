@@ -10,7 +10,7 @@ import { ProductSheet } from '../components/ProductSheet';
 import { SearchBox } from '../components/Search';
 import { useDB } from '../data/store';
 import type { Product } from '../data/types';
-import { brandsOf, lineLabel, linesOf } from '../lib/catalog';
+import { brandsOf, byShelfOrder, lineLabel, linesOf } from '../lib/catalog';
 import { dealLabel } from '../lib/pricing';
 
 export function Stars({ value, size = 16 }: { value: number; size?: number }) {
@@ -88,7 +88,7 @@ export default function Home() {
   const db = useDB();
   const [open, setOpen] = useState<Product | null>(null);
   const lineOf = (p: Product) => db.lines.find((l) => l.id === p.lineId);
-  const best = db.products.filter((p) => p.bestSeller && p.status !== 'out');
+  const best = db.products.filter((p) => p.bestSeller && p.status !== 'out').sort(byShelfOrder);
   const deals = db.deals.filter((d) => d.active && d.productIds.some((id) => db.products.some((p) => p.id === id)));
   const flowerTiers = db.lines.filter((l) => l.category === 'flower').length;
   const vapeLines = linesOf(db, 'vapes');

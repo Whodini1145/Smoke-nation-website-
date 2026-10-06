@@ -3,7 +3,7 @@ import { FLOWER_DISCLAIMER } from '../data/seed';
 import { cardBackground, edgeColor } from '../lib/color';
 import { dealLabel, dealsFor, isDiscounted, money, regularPrice, unitPrice } from '../lib/pricing';
 import { TagIcon } from './Icons';
-import { lineLabel } from '../lib/catalog';
+import { lineLabel, STRAIN_NAMES } from '../lib/catalog';
 
 export function PotencyBars({ level, label = true }: { level: number; label?: boolean }) {
   return (
@@ -117,6 +117,7 @@ export function ProductCard({
       <div className="card-body">
         {showLine && line && <span className="card-line">{lineLabel(line)}</span>}
         <h3 className="card-name">{product.name}</h3>
+        {product.strain && <span className={`strain-tag strain-${product.strain}`}>{STRAIN_NAMES[product.strain]}</span>}
         {category === 'flower' && line?.potency && <PotencyBars level={line.potency} />}
         <PriceTag product={product} />
         {deal && <DealBar deal={deal} />}

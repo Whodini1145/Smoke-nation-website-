@@ -1,4 +1,4 @@
-import type { CategoryId, DB, Line } from '../data/types';
+import type { CategoryId, DB, Line, Product, Strain } from '../data/types';
 
 export const CATEGORY_NAMES: Record<CategoryId, string> = { flower: 'THCA Flower', vapes: 'Vapes' };
 
@@ -14,3 +14,9 @@ export function linesOf(db: Pick<DB, 'lines'>, category: CategoryId): Line[] {
 export function brandsOf(lines: Line[]): string[] {
   return [...new Set(lines.map((l) => l.brand ?? 'Other'))];
 }
+
+/** Shelf order set in the admin; newer items without a position go last. */
+export const byShelfOrder = (a: Product, b: Product) => (a.sort ?? 1e9) - (b.sort ?? 1e9) || a.createdAt - b.createdAt;
+
+export const STRAIN_NAMES: Record<Strain, string> = { indica: 'Indica', hybrid: 'Hybrid', sativa: 'Sativa' };
+export const STRAINS: Strain[] = ['indica', 'hybrid', 'sativa'];

@@ -6,8 +6,8 @@ import { BackIcon } from '../components/Icons';
 import { PotencyBars, ProductCard } from '../components/ProductCard';
 import { ProductSheet } from '../components/ProductSheet';
 import { useDB } from '../data/store';
-import type { CategoryId, Product } from '../data/types';
-import { brandsOf, CATEGORY_NAMES, lineLabel, linesOf } from '../lib/catalog';
+import type { CategoryId, Product, Strain } from '../data/types';
+import { brandsOf, byShelfOrder, CATEGORY_NAMES, lineLabel, linesOf, STRAIN_NAMES, STRAINS } from '../lib/catalog';
 
 const HERO: Record<CategoryId, string> = { flower: flowerJars, vapes: vapeWall };
 
@@ -16,6 +16,7 @@ export default function Category() {
   const db = useDB();
   const nav = useNavigate();
   const [open, setOpen] = useState<Product | null>(null);
+  const [strain, setStrain] = useState<Strain | null>(null);
 
   if (category !== 'flower' && category !== 'vapes') return <Navigate to="/" replace />;
 
@@ -40,8 +41,10 @@ export default function Category() {
   } else {
     return <Navigate to={`/shop/${category}`} replace />;
   }
-  // Sold-out items sink to the end of the grid.
-  shown = [...shown].sort((a, b) => Number(a.status === 'out') - Number(b.status === 'out') || b.createdAt - a.createdAt);
+  // Shelf order from the admin. Sold-out items stay in place so flavor families stay together.
+  shown = [...shown].sort(byShelfOrder);
+  const strainsHere = category === 'flower' ? STRAINS.filter((st) => shown.some((p) => p.strain === st)) : [];
+  if (strain && strainsHere.includes(strain)) shown = shown.filter((p) => p.strain === strain);
 
   const pill = (id: string, label: string) => (
     <Link key={id} to={`/shop/${category}${id === 'best' ? '' : `/${id}`}`} className={`pill${lineId === id ? ' is-on' : ''}`} aria-current={lineId === id ? 'page' : undefined} replace>
@@ -87,6 +90,16 @@ export default function Category() {
           )}
           <span className="grid-count">{shown.length} {shown.length === 1 ? 'item' : 'items'}</span>
         </div>
+        {strainsHere.length > 1 && (
+          <div className="strain-filter" role="group" aria-label="Filter by type">
+            <button type="button" className={`chip-filter${!strain ? ' is-on' : ''}`} onClick={() => setStrain(null)}>All</button>
+            {strainsHere.map((st) => (
+              <button key={st} type="button" className={`chip-filter strain-${st}${strain === st ? ' is-on' : ''}`} onClick={() => setStrain(st)} aria-pressed={strain === st}>
+                {STRAIN_NAMES[st]}
+              </button>
+            ))}
+          </div>
+        )}
         {shown.length ? (
           <div className="grid">
             {shown.map((p) => (

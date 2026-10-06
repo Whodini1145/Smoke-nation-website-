@@ -20,6 +20,7 @@ export interface Line {
 }
 
 export type StockStatus = 'in' | 'low' | 'out';
+export type Strain = 'indica' | 'hybrid' | 'sativa';
 
 export interface Product {
   id: string;
@@ -40,6 +41,10 @@ export interface Product {
   /** The order that last lowered `stock` (lets the database check stock changes made by customers). */
   lastOrderId?: string;
   bestSeller: boolean;
+  /** Position within its product line (lower shows first). */
+  sort?: number;
+  /** Flower only. */
+  strain?: Strain;
   /** Card color: hue 0–360 from the preset swatches, intensity 0–100 (lighter → darker). */
   hue: number;
   saturation: number;

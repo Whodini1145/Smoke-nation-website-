@@ -706,6 +706,14 @@ main { outline: none; min-height: 60vh; }
 .card-desc { margin: 2px 0 0; font-size: 0.85rem; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .disclaimer { font-weight: 700; color: var(--green-deep); }
 
+.strain-tag { justify-self: start; display: inline-block; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-left: 0; }
+.detail-line .strain-tag { margin-left: 8px; vertical-align: 1px; }
+.strain-indica { background: #ece3fb; color: #4b2a85; }
+.strain-hybrid { background: var(--green-pale); color: var(--green-deep); }
+.strain-sativa { background: #fdebd6; color: #8a4a00; }
+.strain-filter { display: flex; gap: 8px; flex-wrap: wrap; margin: -4px 0 16px; }
+.chip-filter { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--line); background: #fff; font-weight: 800; font-size: 0.92rem; }
+.chip-filter.is-on { border-color: var(--ink); background: var(--ink); color: #fff; }
 .potency { display: inline-flex; align-items: center; gap: 3px; }
 .potency > span:not(.potency-text) { width: 16px; height: 7px; border-radius: 2px; background: var(--line); transform: skewX(-14deg); }
 .potency > span.on { background: var(--green); }

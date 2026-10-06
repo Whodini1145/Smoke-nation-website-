@@ -177,3 +177,8 @@
 .stock-stepper { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.9rem; }
 .stock-stepper .btn { min-width: 44px; padding: 0 10px; }
 .counted-status { align-self: end; margin: 0 0 12px; }
+
+.row-lead { display: flex; align-items: center; gap: 6px; }
+.row-move { display: grid; gap: 2px; }
+.row-move button { width: 34px; height: 26px; border: 1px solid var(--line); background: #fff; border-radius: 6px; font-size: 0.7rem; line-height: 1; color: var(--ink-2); }
+.row-move button:disabled { opacity: 0.3; }

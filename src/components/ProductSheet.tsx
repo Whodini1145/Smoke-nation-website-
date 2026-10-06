@@ -3,7 +3,7 @@ import { useCart, useDB } from '../data/store';
 import { isCounted, maxAddable, stockText } from '../lib/stock';
 import { FLOWER_SIZES, type FlowerSize, type Product } from '../data/types';
 import { FLOWER_DISCLAIMER } from '../data/seed';
-import { lineLabel } from '../lib/catalog';
+import { lineLabel, STRAIN_NAMES } from '../lib/catalog';
 import { dealsFor, isDiscounted, money, regularPrice, unitPrice } from '../lib/pricing';
 import { addToCart } from '../lib/util';
 import { MinusIcon, PlusIcon } from './Icons';
@@ -46,7 +46,10 @@ export function ProductSheet({ product, onClose }: { product: Product | null; on
       <div className="detail">
         <ProductArt product={product} category={line.category} />
         <div className="detail-body">
-          <p className="detail-line">{lineLabel(line)}</p>
+          <p className="detail-line">
+            {lineLabel(line)}
+            {product.strain && <span className={`strain-tag strain-${product.strain}`}>{STRAIN_NAMES[product.strain]}</span>}
+          </p>
           <h2 className="detail-name">{product.name}</h2>
           {isFlower && line.potency && <PotencyBars level={line.potency} />}
           {deals.map((d) => (

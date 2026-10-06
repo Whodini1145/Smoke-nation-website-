@@ -5,13 +5,12 @@ import slideFoger from '../assets/slide-foger.jpg';
 import geekbarCase from '../assets/geekbar-case.jpg';
 import slidePulseX2 from '../assets/slide-pulse-x2.jpg';
 
-// Official product photos from Geek Bar (geekbar.com) and Foger (fogertech.com).
-const photos = import.meta.glob<string>('../assets/products/*.webp', { eager: true, import: 'default' });
-const photo = (name: string) => photos[`../assets/products/${name}.webp`];
-const fogerPhotos = import.meta.glob<string>('../assets/products/foger/*.webp', { eager: true, import: 'default' });
-const fogerPhoto = (slug: string) => fogerPhotos[`../assets/products/foger/${slug}.webp`];
-import type { DB, Line, Product, SizePrices } from './types';
-import { FOGER_FLAVORS } from './fogerFlavors';
+// Official product photos from Geek Bar (geekbar.com) and Foger (fogertech.com),
+// served from public/products/ at fixed addresses so saved products keep working.
+const photo = (name: string) => `/products/${name}.webp`;
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+import type { DB, Line, Product, SizePrices, Strain } from './types';
+import { FOGER_FLAVORS, FOGER_ORDER } from './fogerFlavors';
 
 // Starting content. Product names and every price below are placeholders so the
 // site has something to show — replace them from the admin panel.
@@ -25,7 +24,7 @@ const lines: Line[] = [
   { id: 'greenhouse', category: 'flower', name: 'Greenhouse', potency: 1, sort: 4 },
   { id: 'foger-pods', category: 'vapes', brand: 'Foger', name: 'Foger Pods 30K', sort: 1 },
   { id: 'foger-battery', category: 'vapes', brand: 'Foger', name: 'Foger Battery', sort: 2 },
-  { id: 'gb-x2-25', category: 'vapes', brand: 'Geek Bar', name: 'Pulse X 25K', sort: 3 },
+  { id: 'gb-x2-25', category: 'vapes', brand: 'Geek Bar', name: 'Pulse 2', sort: 3 },
   { id: 'gb-x2-50', category: 'vapes', brand: 'Geek Bar', name: 'Pulse X 2 50K', sort: 4 },
   { id: 'gb-mate-kit', category: 'vapes', brand: 'Geek Bar', name: 'Mate Kit 60K', sort: 5 },
   { id: 'gb-mate-pod', category: 'vapes', brand: 'Geek Bar', name: 'Mate Pod 60K', sort: 6 },
@@ -35,7 +34,7 @@ let n = 0;
 const id = (p: string) => `${p}-${(++n).toString(36)}`;
 
 const tierPrices: Record<string, SizePrices> = {
-  exotics: { '1g': 15, '3.5g': 40, '7g': 70, '14g': 120, '1oz': 200 },
+  exotics: { '1g': 10, '3.5g': 30, '7g': 50, '14g': 100, '1oz': 180 },
   hydro: { '1g': 12, '3.5g': 35, '7g': 60, '14g': 100, '1oz': 170 },
   aaa: { '1g': 10, '3.5g': 30, '7g': 50, '14g': 85, '1oz': 140 },
   greenhouse: { '1g': 7, '3.5g': 20, '7g': 35, '14g': 60, '1oz': 100 },
@@ -77,43 +76,49 @@ function vape(lineId: string, name: string, price: number, hue: number, saturati
   };
 }
 
-const products: Product[] = [
-  flower('exotics', 'Sample Exotic One', 272, 55, 55, { bestSeller: true, description: 'Dense, frosty buds. Our top shelf.' }),
-  flower('exotics', 'Sample Exotic Two', 330, 72, 45),
-  flower('exotics', 'Sample Exotic Three', 214, 72, 50, { status: 'low' }),
-  flower('hydro', 'Sample Hydro One', 96, 55, 50, { bestSeller: true }),
-  flower('hydro', 'Sample Hydro Two', 174, 58, 45),
-  flower('aaa', 'Sample AAA One', 47, 92, 40),
-  flower('aaa', 'Sample AAA Two', 26, 88, 45, { onSale: true, saleSizePrices: { '1g': 8, '3.5g': 25, '7g': 45, '14g': 80, '1oz': 130 } }),
-  flower('greenhouse', 'Sample Greenhouse One', 96, 55, 35),
-  flower('greenhouse', 'Sample Greenhouse Two', 24, 38, 40, { status: 'out' }),
+const STRAIN_COLOR: Record<Strain, [number, number]> = { indica: [272, 55], hybrid: [96, 55], sativa: [26, 88] };
+const exotic = (name: string, strain: Strain) =>
+  flower('exotics', name, ...STRAIN_COLOR[strain], 45, { strain, description: '' });
 
-  ...FOGER_FLAVORS.map((f) =>
+const gb = (lineId: string, file: string, price: number, hue: number, saturation: number, extra: Partial<Product> = {}) =>
+  (name: string) => vape(lineId, name, price, hue, saturation, 30, { photo: photo(`geekbar/${file}-${slug(name)}`), ...extra });
+
+const products: Product[] = [
+  // THCA flower: exotics, grouped Indica → Hybrid → Sativa. Photos are added by the shop.
+  ...['High Roller', 'Black Zebra', 'New Money', 'Godfather OG', 'Donny Burger'].map((n) => exotic(n, 'indica')),
+  ...['Biscotti', 'Warheads', 'Crunch Berries', 'Blue Lobster', 'Blue Gummy'].map((n) => exotic(n, 'hybrid')),
+  ...['Motor Breath', '"It\'s a Secret"', 'Purple Hulk', 'Candy Rings', 'Durban Poison'].map((n) => exotic(n, 'sativa')),
+
+  // Foger pods, grouped by flavor family (see FOGER_ORDER). Sold-out flavors stay in their family.
+  ...FOGER_ORDER.map((name) => FOGER_FLAVORS.find((f) => f.name === name)!).map((f) =>
     vape('foger-pods', f.name, 20, f.hue, f.saturation, 30, {
-      photo: fogerPhoto(f.slug),
+      photo: photo(`foger/${f.slug}`),
       status: f.status,
       bestSeller: ['Blue Razz Ice', 'Frozen Watermelon', 'Miami Mint'].includes(f.name),
+      // White pods read better on a gray card.
+      ...(f.name === 'White Gummy' || f.name === 'Gummy Bear' ? { hue: 0, saturation: 0, intensity: 40 } : {}),
     }),
   ),
   vape('foger-battery', 'Switch Pro Battery', 15, 214, 72, 30, { photo: photo('foger-battery'), description: 'Rechargeable 1200mAh base for Foger 30K pods.' }),
-  vape('gb-x2-25', 'Blue Razz Ice', 22, 214, 72, 40, { photo: photo('px-blue-razz-ice'), bestSeller: true }),
-  vape('gb-x2-25', 'Watermelon Ice', 22, 330, 72, 35, { photo: photo('px-watermelon-ice') }),
-  vape('gb-x2-25', 'Miami Mint', 22, 0, 0, 35, { photo: photo('px-miami-mint') }),
-  vape('gb-x2-25', 'Sour Apple Ice', 22, 96, 55, 35, { photo: photo('px-sour-apple-ice') }),
-  vape('gb-x2-25', 'Strawberry B-Pop', 22, 330, 72, 30, { photo: photo('px-strawberry-b-pop') }),
-  vape('gb-x2-25', 'Blackberry B-Pop', 22, 272, 55, 35, { photo: photo('px-blackberry-b-pop') }),
-  vape('gb-x2-50', 'Orange Fcuking Fab', 28, 26, 88, 60, { photo: photo('x2-orange-fcuking-fab'), bestSeller: true }),
-  vape('gb-x2-50', 'Strawberry B-Burst', 28, 330, 72, 60, { photo: photo('x2-strawberry-b-burst') }),
-  vape('gb-x2-50', 'Blue Rancher', 28, 214, 72, 60, { photo: photo('x2-blue-rancher') }),
-  vape('gb-x2-50', 'Grape Slush', 28, 272, 55, 60, { photo: photo('x2-grape-slush'), onSale: true, salePrice: 24 }),
-  vape('gb-x2-50', 'Peach Slush', 28, 330, 72, 55, { photo: photo('x2-peach-slush') }),
-  vape('gb-x2-50', 'Watermelon Crush', 28, 2, 72, 60, { photo: photo('x2-watermelon-crush') }),
-  vape('gb-mate-kit', 'Strawberry Kiwi Kit', 30, 330, 72, 25, { photo: photo('mate-strawberry-kiwi'), description: 'Battery and one pod, 60K puffs.' }),
-  vape('gb-mate-kit', 'Blueberry Yummy Kit', 30, 214, 72, 25, { photo: photo('mate-blueberry-yummy'), description: 'Battery and one pod, 60K puffs.' }),
-  vape('gb-mate-pod', 'Peach Mango Watermelon', 22, 47, 92, 30, { photo: photo('mate-peach-mango-watermelon'), description: 'Pod only. Fits the Mate battery.' }),
-  vape('gb-mate-pod', 'White Peach Raspberry', 22, 330, 72, 25, { photo: photo('mate-white-peach-raspberry'), description: 'Pod only. Fits the Mate battery.' }),
-  vape('gb-mate-pod', 'Strawberry Mint Candy', 22, 174, 58, 25, { photo: photo('mate-strawberry-mint-candy'), description: 'Pod only. Fits the Mate battery.' }),
-];
+
+  // Geek Bar Pulse 2: ice, frozen, fruit, sour, then the Hubba edition (no official photos yet).
+  ...['White Gummy Ice', 'Juicy Peach Ice', 'Sour Apple Ice', 'Frozen White Grape', 'Stone Freeze', 'Dragon Melon', 'Strawberry Banana', 'Sour Gush', 'Fcuking FAB'].map(gb('gb-x2-25', 'pulse2', 22, 214, 72)),
+  ...['Grape Hubba', 'Lemon Hubba', 'Blue Razz Hubba', 'White Peach Hubba'].map((n, i) => vape('gb-x2-25', n, 22, [272, 47, 214, 330][i], [55, 92, 72, 72][i], 30)),
+
+  // Geek Bar Pulse X 2: Fab, Bull, ice, slush, fruit.
+  ...['Orange Fcuking Fab', 'Sour Fcuking Fab'].map(gb('gb-x2-50', 'x2', 28, 26, 88)),
+  ...['Strawberry Bull', 'Blue Razz Bull', 'Coco Berry Bull', 'Peach Bull', 'Watermelon Bull'].map(gb('gb-x2-50', 'x2', 28, 2, 72)),
+  ...['Blue Razz Ice', 'Watermelon Ice', 'Wild Cherry Slush'].map(gb('gb-x2-50', 'x2', 28, 214, 72)),
+  ...['White Peach Raspberry', 'Pink & Blue', 'Blackberry Blueberry', 'Blue Rancher'].map(gb('gb-x2-50', 'x2', 28, 330, 72)),
+
+  // Geek Bar Mate 60K kits and pods: mint/ice, fruit, lemonade.
+  ...['Cool Mint', 'Blue Razz Ice', 'Sour Apple Ice', 'Watermelon Ice', 'Sky Blue Ice', 'Juicy Peach', 'Strawberry Banana', 'Triple Berry', 'Amazon Lemonade'].map(
+    gb('gb-mate-kit', 'mate-kit', 30, 174, 58, { description: 'Battery and one pod, 60K puffs.' }),
+  ),
+  ...['Cool Mint', 'Blue Razz Ice', 'Sour Apple Ice', 'Watermelon Ice', 'Blue Straws', 'Juicy Peach', 'Strawberry Banana', 'Amazon Lemonade'].map(
+    gb('gb-mate-pod', 'mate-pod', 22, 174, 58, { description: 'Pod only. Fits the Mate battery.' }),
+  ),
+].map((p, i) => ({ ...p, sort: i }));
 
 const fogerPodIds = products.filter((p) => p.lineId === 'foger-pods').map((p) => p.id);
 
@@ -145,7 +150,7 @@ export function createSeed(): DB {
       { id: 't-greenhouse', category: 'flower', label: 'Greenhouse', lineId: 'greenhouse', hue: 174, saturation: 58, intensity: 40 },
       { id: 't-foger-pods', category: 'vapes', label: 'Foger Pods', lineId: 'foger-pods', hue: 330, saturation: 72, intensity: 45 },
       { id: 't-foger-battery', category: 'vapes', label: 'Foger Battery', lineId: 'foger-battery', hue: 0, saturation: 0, intensity: 50 },
-      { id: 't-x2-25', category: 'vapes', label: 'Pulse X 25K', lineId: 'gb-x2-25', hue: 214, saturation: 72, intensity: 50 },
+      { id: 't-x2-25', category: 'vapes', label: 'Pulse 2', lineId: 'gb-x2-25', hue: 214, saturation: 72, intensity: 50 },
       { id: 't-x2-50', category: 'vapes', label: 'Pulse X 2 50K', lineId: 'gb-x2-50', hue: 272, saturation: 55, intensity: 50 },
       { id: 't-mate-kit', category: 'vapes', label: 'Mate Kit 60K', lineId: 'gb-mate-kit', hue: 2, saturation: 72, intensity: 45 },
       { id: 't-mate-pod', category: 'vapes', label: 'Mate Pod 60K', lineId: 'gb-mate-pod', hue: 26, saturation: 88, intensity: 45 },

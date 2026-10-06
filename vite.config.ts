@@ -1,16 +1,15 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { viteSingleFile } from 'vite-plugin-singlefile';
 
-// `npm run build:preview` produces one self-contained HTML file (images inlined)
-// that can be opened directly on a phone. The normal build is for real hosting.
+// `npm run build:preview` builds a copy that keeps its data in the browser
+// (no database), for testing. The normal build is the live site.
 export default defineConfig(({ mode }) => ({
-  plugins: mode === 'preview' ? [react(), viteSingleFile()] : [react()],
+  plugins: [react()],
   // Security rules tests need the Firestore emulator: run them with `npm run test:rules`.
   test: { exclude: ['tests/**', 'node_modules/**'] },
   build:
     mode === 'preview'
-      ? { outDir: 'preview-dist', assetsInlineLimit: 100_000_000 }
+      ? { outDir: 'preview-dist' }
       : { outDir: 'dist' },
 }));
