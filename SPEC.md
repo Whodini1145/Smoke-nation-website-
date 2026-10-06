@@ -117,6 +117,15 @@ These decisions were made after the original spec and **override it where they c
 - 70 Foger Switch Pro 30K pod flavors in the starter catalog (59 in stock, 11 sold out) with official names and photos from fogertech.com. Placeholder price $20, all in the sample 2-for-$35 deal.
 - Names corrected to Foger's official spelling: Mexico Mango, Lime Berry Orange, Pink & Blue, Peach Berries Refresher, Dragon Melon, Frozen Banana, Blueberry Cotton Candy, Strawnana Ice Cream.
 
+### To-do list from the site manager (saved 2026-10-06, not started: wait for the rest of the list)
+1. **White Gummy pod photo** looks wrong: find a better-quality picture (Google/other sources are fine). For any pod photo, use the best quality available. Card background doesn't have to match the pod color: for white pods use white + gray (or similar) so the pod stands out instead of blending in.
+2. **Change the order of products** in the admin (grid/list), e.g. drag or move up/down within a product line.
+3. **Group Foger flavors by family** and keep each family together: Frozen, Refresher, Ice, Berry, Slush, Cupcake, etc. Sold-out flavors stay inside their family, not at the bottom (so shoppers see "they carry it, it's just out" while browsing that family). Stop sinking sold-out items to the end of the grid.
+4. **THCA flower picture on the home page** (Explore tile / banner) cuts off the top. Owner will resend a new image; center it.
+5. More coming: Geek Bar products and other changes after the manager reviews the site.
+
+Note: the main staff account now exists, so the live catalog lives in the database. Changes to existing products (order, photos) must be applied to the database too, not only to the starter content in seed.ts.
+
 ### Still to be decided
 - Shipping cost model, minimum order, payment processor, order notifications (email/text), domain name, admin link final placement.
 
