@@ -2,9 +2,12 @@ import { useSyncExternalStore } from 'react';
 import { createSeed } from './seed';
 import type { CartLine, DB } from './types';
 
-// Preview data layer. Everything is kept in this browser's localStorage so the
-// site can be clicked through before the real database exists. When Supabase is
-// connected, `getDB`/`updateDB` are the only functions that need to change.
+// Data layer. On the live site the database is Firebase (see firebase.ts),
+// which keeps this in-memory copy up to date and saves every change made with
+// `updateDB`. The single-file preview (`npm run build:preview`) has no
+// database, so it keeps everything in this browser's localStorage instead.
+
+export const USE_FIREBASE = import.meta.env.MODE !== 'preview' && import.meta.env.MODE !== 'test';
 
 const DB_KEY = 'sn-db-v3';
 const CART_KEY = 'sn-cart-v2';
@@ -12,10 +15,10 @@ const SESSION_KEY = 'sn-session-v1';
 
 type Listener = () => void;
 
-function createStore<T>(key: string, init: () => T) {
+function createStore<T>(key: string | null, init: () => T) {
   let state: T;
   try {
-    const raw = localStorage.getItem(key);
+    const raw = key ? localStorage.getItem(key) : null;
     state = raw ? (JSON.parse(raw) as T) : init();
   } catch {
     state = init();
@@ -25,11 +28,13 @@ function createStore<T>(key: string, init: () => T) {
     get: () => state,
     set(next: T) {
       state = next;
-      try {
-        localStorage.setItem(key, JSON.stringify(next));
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'QuotaExceededError') {
-          alert('This browser is out of storage space for photos. Use smaller photos, or remove a few, then try again.');
+      if (key) {
+        try {
+          localStorage.setItem(key, JSON.stringify(next));
+        } catch (err) {
+          if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+            alert('This browser is out of storage space for photos. Use smaller photos, or remove a few, then try again.');
+          }
         }
       }
       listeners.forEach((l) => l());
@@ -41,7 +46,11 @@ function createStore<T>(key: string, init: () => T) {
   };
 }
 
-const dbStore = createStore<DB>(DB_KEY, createSeed);
+function emptyAccounts(db: DB): DB {
+  return { ...db, orders: [], customers: [], admins: [] };
+}
+
+const dbStore = USE_FIREBASE ? createStore<DB>(null, () => emptyAccounts(createSeed())) : createStore<DB>(DB_KEY, createSeed);
 const cartStore = createStore<CartLine[]>(CART_KEY, () => []);
 
 export interface Session {
@@ -53,11 +62,25 @@ const sessionStore = createStore<Session>(SESSION_KEY, () => ({}));
 
 export const getDB = dbStore.get;
 
+type SyncHandler = (prev: DB, next: DB) => void;
+let sync: SyncHandler | null = null;
+/** Firebase registers here to save local changes to the database. */
+export function setSyncHandler(fn: SyncHandler) {
+  sync = fn;
+}
+
 /** Apply a change to a copy of the database and save it. */
 export function updateDB(mutate: (draft: DB) => void) {
-  const draft = structuredClone(dbStore.get());
+  const prev = dbStore.get();
+  const draft = structuredClone(prev);
   mutate(draft);
   dbStore.set(draft);
+  sync?.(prev, draft);
+}
+
+/** Replace the local copy without saving (used when the database sends new data). */
+export function replaceDB(next: DB) {
+  dbStore.set(next);
 }
 
 export function resetDB() {

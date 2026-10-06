@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { getDB, uid, updateDB, useCart, useDB, useSession } from '../data/store';
+import { getDB, uid, updateDB, useCart, useDB, useSession, USE_FIREBASE } from '../data/store';
 import type { Fulfillment, Order } from '../data/types';
 import { lineLabel } from '../lib/catalog';
 import { money, money2, priceCart } from '../lib/pricing';
@@ -46,7 +46,7 @@ export default function Checkout() {
     const latest = getDB();
     const order: Order = {
       id: uid('o'),
-      number: 1001 + latest.orders.length,
+      number: USE_FIREBASE ? 100000 + Math.floor(Math.random() * 900000) : 1001 + latest.orders.length,
       createdAt: Date.now(),
       customerId: me?.id,
       name: form.name.trim(),
@@ -171,7 +171,7 @@ export default function Checkout() {
           </fieldset>
           {!me && (
             <p className="fine">
-              Want to see this order later? <Link to="/account">Sign in or create an account</Link> first. Orders under the same email are added to your account.
+              Want to see this order later? <Link to="/account">Sign in or create an account</Link> first.
             </p>
           )}
         </div>

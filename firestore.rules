@@ -1,0 +1,64 @@
+rules_version = '2';
+
+// Who can read and change what.
+//   Everyone: read the shop (products, photos, settings) and place orders.
+//   Customers: read their own orders and profile.
+//   Staff (admins/{uid}): change the shop and see every order.
+//   Main account (meta/firstAdmin): also adds and removes staff.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function path(p) { return /databases/$(database)/documents/$(p); }
+    function isStaff() { return signedIn() && exists(path('admins/' + request.auth.uid)); }
+    function isMain() {
+      return signedIn() && exists(path('meta/firstAdmin'))
+        && get(path('meta/firstAdmin')).data.uid == request.auth.uid;
+    }
+
+    match /site/{docId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+    match /products/{id} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+    match /photos/{id} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // The very first staff account claims the main-account slot, once.
+    match /meta/firstAdmin {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && existsAfter(path('admins/' + request.auth.uid));
+      allow update, delete: if false;
+    }
+
+    match /admins/{uid} {
+      allow read: if isStaff() || (signedIn() && request.auth.uid == uid);
+      allow create: if isMain()
+        || (signedIn() && uid == request.auth.uid
+            && !exists(path('meta/firstAdmin'))
+            && getAfter(path('meta/firstAdmin')).data.uid == request.auth.uid);
+      allow update: if isMain();
+      allow delete: if isMain() && uid != request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+      allow read: if isStaff();
+    }
+
+    match /orders/{id} {
+      allow create: if request.resource.data.status == 'new'
+        && (!('customerId' in request.resource.data)
+            || (signedIn() && request.resource.data.customerId == request.auth.uid));
+      allow read: if isStaff()
+        || (signedIn() && resource.data.customerId == request.auth.uid);
+      allow update, delete: if isStaff();
+    }
+  }
+}

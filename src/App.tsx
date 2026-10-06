@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { USE_FIREBASE } from './data/store';
 import { AgeGate, Footer, Header } from './components/Chrome';
 import { ToastHost } from './components/Overlay';
 import About from './pages/About';
@@ -20,11 +21,13 @@ function ScrollToTop() {
   return null;
 }
 
-// Hash URLs (#/shop/vapes) let the preview file open anywhere. On real hosting
-// this can switch to normal URLs (BrowserRouter) with no other changes.
+// The live site uses normal URLs (/shop/vapes). The single-file preview uses
+// hash URLs (#/shop/vapes) so it can be opened from anywhere.
+const Router = USE_FIREBASE ? BrowserRouter : HashRouter;
+
 export default function App() {
   return (
-    <HashRouter>
+    <Router>
       <ScrollToTop />
       <a href="#main" className="skip-link" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>
         Skip to content
@@ -47,6 +50,6 @@ export default function App() {
       <Footer />
       <ToastHost />
       <AgeGate />
-    </HashRouter>
+    </Router>
   );
 }

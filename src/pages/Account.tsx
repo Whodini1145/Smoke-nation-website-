@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { showToast } from '../components/Overlay';
-import { getDB, uid, updateDB, updateSession, useDB, useSession } from '../data/store';
+import { useDB, useSession } from '../data/store';
+import { customerSignIn, customerSignUp, friendlyError, signOutCustomer } from '../data/accounts';
 import type { Order, OrderStatus } from '../data/types';
 import { money2 } from '../lib/pricing';
-import { addToCart, hashPassword } from '../lib/util';
+import { addToCart } from '../lib/util';
 
 export const STATUS_TEXT: Record<OrderStatus, string> = {
   new: 'Received',
@@ -104,28 +105,19 @@ function AuthForms() {
   const [f, setF] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
 
+  const [busy, setBusy] = useState(false);
+
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    const email = f.email.trim().toLowerCase();
-    const hash = await hashPassword(email, f.password);
-    const db = getDB();
-    const existing = db.customers.find((c) => c.email === email);
-    if (mode === 'in') {
-      if (!existing || existing.passwordHash !== hash) return setError('That email and password don’t match an account. Check them, or create an account.');
-      updateSession({ customerId: existing.id });
-    } else {
-      if (existing) return setError('An account with that email already exists. Sign in instead.');
-      if (f.password.length < 8) return setError('Use at least 8 characters for your password.');
-      const id = uid('c');
-      updateDB((d) => {
-        d.customers.push({ id, email, name: f.name.trim(), passwordHash: hash });
-        // Past guest orders under this email join the new account.
-        d.orders.forEach((o) => {
-          if (!o.customerId && o.email === email) o.customerId = id;
-        });
-      });
-      updateSession({ customerId: id });
+    setBusy(true);
+    try {
+      if (mode === 'in') await customerSignIn(f.email, f.password);
+      else await customerSignUp(f.name, f.email, f.password);
+    } catch (err) {
+      setError(await friendlyError(err));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -151,7 +143,7 @@ function AuthForms() {
           <input required type="password" autoComplete={mode === 'in' ? 'current-password' : 'new-password'} value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} minLength={mode === 'up' ? 8 : undefined} />
         </label>
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button type="submit" className="btn btn-primary btn-block">{mode === 'in' ? 'Sign in' : 'Create account'}</button>
+        <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'One moment…' : mode === 'in' ? 'Sign in' : 'Create account'}</button>
         <p className="fine">You don't need an account to order. With one, your past orders are saved here so you can buy your favorites again in one tap.</p>
       </form>
     </div>
@@ -178,7 +170,7 @@ export default function Account() {
       <h1 className="h-display">Hey, {me.name.split(' ')[0] || 'there'}</h1>
       <p className="lead">
         Signed in as {me.email}.{' '}
-        <button type="button" className="link-btn" onClick={() => updateSession({ customerId: undefined })}>
+        <button type="button" className="link-btn" onClick={() => void signOutCustomer()}>
           Sign out
         </button>
       </p>

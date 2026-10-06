@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { getDB, uid, updateDB, updateSession, useDB, useSession } from '../../data/store';
-import { hashPassword } from '../../lib/util';
+import { USE_FIREBASE, useDB, useSession } from '../../data/store';
+import { friendlyError, setupMainAdmin, signOutStaff, staffSignIn } from '../../data/accounts';
 import DealsTab from './Deals';
 import HomeTab from './HomeScreen';
 import MenuTab from './MenuPanel';
@@ -20,28 +20,32 @@ const TABS = [
 
 function AdminLogin() {
   const db = useDB();
-  const firstRun = db.admins.length === 0;
+  const firstRun = USE_FIREBASE ? db.mainAdminId === null : db.admins.length === 0;
   const [f, setF] = useState({ name: '', email: '', password: '', confirm: '' });
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    const email = f.email.trim().toLowerCase();
-    const hash = await hashPassword(email, f.password);
-    if (firstRun) {
-      if (f.password.length < 10) return setError('Use at least 10 characters for the admin password.');
-      if (f.password !== f.confirm) return setError('The two passwords don’t match.');
-      const id = uid('a');
-      updateDB((d) => {
-        d.admins.push({ id, email, name: f.name.trim(), passwordHash: hash });
-      });
-      updateSession({ adminId: id });
-      return;
+    if (firstRun && f.password !== f.confirm) return setError('The two passwords don’t match.');
+    setBusy(true);
+    try {
+      if (firstRun) await setupMainAdmin(f.name, f.email, f.password);
+      else await staffSignIn(f.email, f.password);
+    } catch (err) {
+      setError(await friendlyError(err));
+    } finally {
+      setBusy(false);
     }
-    const admin = getDB().admins.find((a) => a.email === email);
-    if (!admin || admin.passwordHash !== hash) return setError('That email and password don’t match a staff account.');
-    updateSession({ adminId: admin.id });
+  }
+
+  if (USE_FIREBASE && db.mainAdminId === undefined) {
+    return (
+      <div className="wrap page narrow-page">
+        <p className="lead">Loading…</p>
+      </div>
+    );
   }
 
   return (
@@ -70,7 +74,7 @@ function AdminLogin() {
           </label>
         )}
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button type="submit" className="btn btn-primary btn-block">{firstRun ? 'Create admin account' : 'Sign in'}</button>
+        <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'One moment…' : firstRun ? 'Create admin account' : 'Sign in'}</button>
       </form>
       <p className="fine">
         <Link to="/">Back to the shop</Link>
@@ -95,7 +99,7 @@ export default function Admin() {
           <h1 className="admin-title">Admin</h1>
           <span className="admin-who">
             {me.name || me.email}{' '}
-            <button type="button" className="link-btn" onClick={() => updateSession({ adminId: undefined })}>
+            <button type="button" className="link-btn" onClick={() => void signOutStaff()}>
               Sign out
             </button>
           </span>

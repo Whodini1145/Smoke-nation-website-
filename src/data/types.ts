@@ -173,4 +173,6 @@ export interface DB {
   orders: Order[];
   customers: Account[];
   admins: Account[];
+  /** The first staff account. Only it can add or remove other staff. */
+  mainAdminId?: string | null;
 }

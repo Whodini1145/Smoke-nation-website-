@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { showToast } from '../../components/Overlay';
-import { getDB, resetDB, uid, updateDB, updateSession, useDB, useSession } from '../../data/store';
+import { resetDB, updateDB, updateSession, useDB, useSession, USE_FIREBASE } from '../../data/store';
+import { addStaff, changeMyPassword, friendlyError, removeStaff } from '../../data/accounts';
 import type { Settings } from '../../data/types';
-import { hashPassword } from '../../lib/util';
 import { MoneyInput } from './shared';
 
 function NumberField({ label, value, suffix, onChange, step = 0.01 }: { label: string; value: number; suffix: string; onChange: (n: number) => void; step?: number }) {
@@ -23,33 +23,34 @@ function AdminAccounts() {
   const [f, setF] = useState({ name: '', email: '', password: '' });
   const [pw, setPw] = useState('');
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   // The first staff account is the main one: it adds and removes everyone else.
-  const main = db.admins[0];
-  const isMain = !!main && main.id === session.adminId;
+  const mainId = db.mainAdminId ?? db.admins[0]?.id;
+  const isMain = !!mainId && mainId === session.adminId;
+
+  async function run(fn: () => Promise<void>, done: string) {
+    setError('');
+    setBusy(true);
+    try {
+      await fn();
+      showToast(done);
+      return true;
+    } catch (err) {
+      setError(await friendlyError(err));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function add(e: FormEvent) {
     e.preventDefault();
-    setError('');
-    const email = f.email.trim().toLowerCase();
-    if (getDB().admins.some((a) => a.email === email)) return setError('That email already has staff access.');
-    if (f.password.length < 10) return setError('Use at least 10 characters for the password.');
-    const passwordHash = await hashPassword(email, f.password);
-    updateDB((d) => {
-      d.admins.push({ id: uid('a'), email, name: f.name.trim(), passwordHash });
-    });
-    setF({ name: '', email: '', password: '' });
-    showToast(`Added ${email}`);
+    if (await run(() => addStaff(f.name, f.email, f.password), `Gave ${f.email.trim()} staff access`)) setF({ name: '', email: '', password: '' });
   }
 
   async function changePw(e: FormEvent) {
     e.preventDefault();
-    const me = getDB().admins.find((a) => a.id === session.adminId);
-    if (!me) return;
-    if (pw.length < 10) return setError('Use at least 10 characters for the password.');
-    const passwordHash = await hashPassword(me.email, pw);
-    updateDB((d) => (d.admins.find((a) => a.id === me.id)!.passwordHash = passwordHash));
-    setPw('');
-    showToast('Password changed');
+    if (await run(() => changeMyPassword(session.adminId!, pw), 'Password changed')) setPw('');
   }
 
   return (
@@ -59,12 +60,17 @@ function AdminAccounts() {
         {db.admins.map((a) => (
           <li key={a.id} className="admin-row">
             <div className="row-main">
-              <span className="row-name">{a.name || a.email}{a.id === session.adminId ? ' (you)' : ''}{a.id === main?.id ? ', main account' : ''}</span>
+              <span className="row-name">{a.name || a.email}{a.id === session.adminId ? ' (you)' : ''}{a.id === mainId ? ', main account' : ''}</span>
               <span className="row-meta">{a.email}</span>
             </div>
             {isMain && a.id !== session.adminId && (
               <div className="row-actions">
-                <button type="button" className="btn btn-small btn-ghost danger" onClick={() => window.confirm(`Remove staff access for ${a.email}?`) && updateDB((d) => (d.admins = d.admins.filter((x) => x.id !== a.id)))}>
+                <button
+                  type="button"
+                  className="btn btn-small btn-ghost danger"
+                  disabled={busy}
+                  onClick={() => window.confirm(`Remove staff access for ${a.email}?`) && void run(() => removeStaff(a.id), `Removed staff access for ${a.email}`)}
+                >
                   Remove access
                 </button>
               </div>
@@ -79,15 +85,15 @@ function AdminAccounts() {
           <label>Name<input required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
           <label>Email<input required type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>
           <label>Password<input required type="password" autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
-          <button type="submit" className="btn btn-primary btn-small">Add staff account</button>
+          <button type="submit" className="btn btn-primary btn-small" disabled={busy}>Add staff account</button>
         </form>
       ) : (
-        <p className="fine">Only the main account ({main?.email}) can add or remove staff.</p>
+        <p className="fine">Only the main account ({db.admins.find((a) => a.id === mainId)?.email ?? 'the first staff account'}) can add or remove staff.</p>
       )}
       <form className="fields fields-inline" onSubmit={changePw}>
         <h3 className="h-sub">Change your password</h3>
         <label>New password<input type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} /></label>
-        <button type="submit" className="btn btn-ghost btn-small" disabled={!pw}>Change password</button>
+        <button type="submit" className="btn btn-ghost btn-small" disabled={!pw || busy}>Change password</button>
       </form>
       {error && <p className="form-error" role="alert">{error}</p>}
     </section>
@@ -153,6 +159,7 @@ export default function SettingsTab() {
 
       <AdminAccounts />
 
+      {!USE_FIREBASE && (
       <section className="admin-section">
         <h2 className="h-section">Preview data</h2>
         <p className="fine">This preview saves everything in this browser only. Starting over puts back the sample products and removes test orders and accounts.</p>
@@ -168,6 +175,7 @@ export default function SettingsTab() {
           Start over with sample data
         </button>
       </section>
+      )}
     </div>
   );
 }
