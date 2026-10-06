@@ -1,0 +1,49 @@
+# Auto upload to Firebase.
+#   Push to the repo's default branch -> the live site (smoke-nation.web.app).
+#   Push to any other branch          -> a test link to check before going live.
+# Google trusts this repo through workload identity federation: no keys or
+# passwords are stored in GitHub.
+name: Upload to Firebase
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/566305638559/locations/global/workloadIdentityPools/github/providers/github-oidc
+          service_account: github-deploy@smoke-nation.iam.gserviceaccount.com
+
+      - name: Upload live site
+        if: github.ref_name == github.event.repository.default_branch
+        run: npx firebase deploy --only hosting,firestore:rules --project smoke-nation --non-interactive
+
+      - name: Upload test link
+        if: github.ref_name != github.event.repository.default_branch
+        run: |
+          npx firebase hosting:channel:deploy test --expires 30d --project smoke-nation --non-interactive --json > channel.json
+          url=$(node -e "const r=require('./channel.json').result; console.log(Object.values(r)[0].url)")
+          echo "Test link: $url" | tee -a "$GITHUB_STEP_SUMMARY"
