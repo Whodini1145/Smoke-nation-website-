@@ -82,7 +82,11 @@ export const FOGER_FLAVORS: FogerFlavor[] = [
   { name: "Coconut Cupcake", slug: 'coconut-cupcake', status: 'out', hue: 214, saturation: 72 },
 ];
 
-/** Display order: flavors grouped by family, sold-out flavors kept inside their family. */
+/**
+ * Display order: flavors grouped by family. Sold-out flavors sit inside their family,
+ * spread out so at least two in-stock flavors are between any two sold-out ones.
+ * Sold-out flavors with no family of their own are tucked in near something similar.
+ */
 export const FOGER_ORDER: string[] = [
   // Mint
   'Cool Mint', 'Gum Mint', 'Miami Mint',
@@ -90,27 +94,23 @@ export const FOGER_ORDER: string[] = [
   'Sour Apple Ice', 'Juicy Peach Ice', 'Strawberry Ice', 'Watermelon Ice', 'Blue Razz Ice',
   // Fruit
   'Strawberry Kiwi', 'Strawberry Watermelon', 'Strawberry Banana', 'Strawberry Mango', 'Blueberry Watermelon', 'Raspberry Watermelon',
-  'Blackberry Blueberry', 'Berry Bliss', 'Lime Berry Orange', 'Mexico Mango', 'Blue Dragon', 'Dragon Melon', 'Kiwi Dragon Berry',
-  'Cherry Bomb', 'California Cherry', 'Pink & Blue', 'Watermelon Bubble Gum',
+  'Watermelon Cotton Candy', 'Blackberry Blueberry', 'Berry Bliss', 'Lime Berry Orange', 'Kiwi Dragon Berry', 'Mexico Mango',
+  'Blue Dragon', 'Dragon Melon', 'Cherry Bomb', 'California Cherry', 'Pink & Blue', 'Watermelon Bubble Gum',
   // Lemonade
-  'Lemon Heads', 'Dragon Fruit Lemonade', 'Pink Lemonade',
+  'Lemon Heads', 'White Gummy', 'Dragon Fruit Lemonade', 'Pink Lemonade',
   // Sour
   'Blue Sour Raspberry', 'Sour Blue Dust', 'Sour Fcuking Fab',
   // Candy
-  'Blue Rancher', 'OMG B-Burst', 'Strawberry B-Burst', 'Gummy Bear', 'White Gummy',
+  'Blue Rancher', 'Gummy Bear', 'OMG B-Burst', 'Strawberry B-Burst', 'Strawberry Cotton Candy', 'Blueberry Cotton Candy',
   // Punch
   'Sour Punch', 'Hawaiian Punch', 'Triple Berry Punch', 'Purple Passion Punch', 'Sour Raspberry Punch',
   // Frozen
-  'Frozen Watermelon', 'Frozen Pineapple', 'Frozen Blackberry', 'Frozen Blueberry', 'Frozen Banana', 'Frozen Lemon',
-  'Frozen Wildberry Mix', 'Frozen Summer Pear', 'Frozen Orange & Green', 'Frozen Strawberry Grapefruit',
+  'Frozen Watermelon', 'Frozen Pineapple', 'Frozen Blueberry', 'Frozen Blackberry', 'Frozen Wildberry Mix', 'Frozen Banana',
+  'Frozen Summer Pear', 'Frozen Orange & Green', 'Frozen Lemon', 'Frozen Strawberry Grapefruit',
   // Slush
-  'Strawberry Slush', 'Cherry Slush', 'Peach Slush', 'Cola Slush', 'Grape Slush', 'Orange Slush',
+  'Strawberry Slush', 'Cherry Slush', 'Peach Slush', 'Orange Slush', 'Cola Slush', 'Grape Slush',
+  // Dessert
+  'Strawnana Ice Cream', 'Coconut Cupcake', 'Vanilla Ice Cream', 'Chocolate Cupcake', 'Strawberry Cupcake',
   // Refresher
   'Red Mix Refresher', 'Orange Dream Refresher', 'Mango Pineapple Refresher', 'Blackberry Passion Refresher', 'Peach Berries Refresher',
-  // Cotton candy
-  'Blueberry Cotton Candy', 'Watermelon Cotton Candy', 'Strawberry Cotton Candy',
-  // Ice cream
-  'Strawnana Ice Cream', 'Vanilla Ice Cream',
-  // Cupcake
-  'Chocolate Cupcake', 'Strawberry Cupcake', 'Coconut Cupcake',
 ];
