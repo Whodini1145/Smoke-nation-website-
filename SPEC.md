@@ -1,5 +1,7 @@
 # Smoke Nation — Website Spec & Planning Notes
 
+> **Live (2026-10-06):** https://smoke-nation.web.app on Google Firebase (Hosting + Firestore + Auth). Deploy with `npm run deploy` (needs `firebase login`).
+>
 > **Status (2026-10-05):** First pass built — full storefront, cart/checkout, accounts and admin panel, running on sample data in the browser. See README.md.
 > Next: owner review of the preview, then connect Supabase + Vercel, then payment processor.
 > Store hours (from flyer): Mon–Thu 10am–8pm, Fri–Sat 10am–9pm, Sun 12pm–8pm. Address: 420 Pine St, Frankston, TX 75763. In-store policy: price match with a receipt.
