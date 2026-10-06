@@ -8,11 +8,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function path(p) { return /databases/$(database)/documents/$(p); }
-    function isStaff() { return signedIn() && exists(path('admins/' + request.auth.uid)); }
+    function isStaff() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
     function isMain() {
-      return signedIn() && exists(path('meta/firstAdmin'))
-        && get(path('meta/firstAdmin')).data.uid == request.auth.uid;
+      return signedIn() && exists(/databases/$(database)/documents/meta/firstAdmin)
+        && get(/databases/$(database)/documents/meta/firstAdmin).data.uid == request.auth.uid;
     }
 
     match /site/{docId} {
@@ -29,8 +28,8 @@ service cloud.firestore {
         && d.stock >= 0 && d.stock < o.stock && o.stock - d.stock <= 500
         && d.status in ['in', 'low', 'out']
         && d.lastOrderId is string
-        && !exists(path('orders/' + d.lastOrderId))
-        && existsAfter(path('orders/' + d.lastOrderId));
+        && !exists(/databases/$(database)/documents/orders/$(d.lastOrderId))
+        && existsAfter(/databases/$(database)/documents/orders/$(d.lastOrderId));
     }
 
     match /products/{id} {
@@ -48,7 +47,7 @@ service cloud.firestore {
       allow read: if true;
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
-        && existsAfter(path('admins/' + request.auth.uid));
+        && existsAfter(/databases/$(database)/documents/admins/$(request.auth.uid));
       allow update, delete: if false;
     }
 
@@ -56,8 +55,8 @@ service cloud.firestore {
       allow read: if isStaff() || (signedIn() && request.auth.uid == uid);
       allow create: if isMain()
         || (signedIn() && uid == request.auth.uid
-            && !exists(path('meta/firstAdmin'))
-            && getAfter(path('meta/firstAdmin')).data.uid == request.auth.uid);
+            && !exists(/databases/$(database)/documents/meta/firstAdmin)
+            && getAfter(/databases/$(database)/documents/meta/firstAdmin).data.uid == request.auth.uid);
       allow update: if isMain();
       allow delete: if isMain() && uid != request.auth.uid;
     }
