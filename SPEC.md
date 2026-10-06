@@ -128,7 +128,7 @@ Note: the main staff account now exists, so the live catalog lives in the databa
 
 ### Catalog update (2026-10-06)
 - THCA flower: Top Tier Exotics with Indica / Hybrid / Sativa types (filter chips on the shop, tag on each card, Type field and bulk Type in admin). Exotic prices: 1g $10, 3.5g $30, 7g $50, 14g $100, 1oz $180. Strains: Indica: High Roller, Black Zebra, New Money, Godfather OG, Donny Burger. Hybrid: Biscotti, Warheads, Crunch Berries, Blue Lobster, Blue Gummy. Sativa: Motor Breath, "It's a Secret", Purple Hulk, Candy Rings, Durban Poison. Sample products in the other tiers removed. Photos come from the shop.
-- Geek Bar lines: Pulse 2 (13 flavors incl. the Hubba edition), Pulse X 2 50K (14 incl. the Bull flavors), Mate Kit 60K (9), Mate Pod 60K (8). Official photos from geekbar.com except the 4 Hubba flavors. Prices are placeholders.
+- Geek Bar lines: Pulse 2 25K (13 flavors incl. the Hubba edition) $25.99, Pulse X 2 50K (14 incl. the Bull flavors) $30, Mate Kit 60K (9) $30, Mate Pod 60K (8) $22.99. Photos from geekbar.com; the 4 Hubba photos are Geek Bar product shots from a retailer listing (vapordna.com).
 - Shelf order: every product has a position; admin has ▲▼ per row and bulk Order (top/bottom). Flavor families stay together and sold-out items stay in place.
 - Product photos live in public/products/ at fixed addresses.
 

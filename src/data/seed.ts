@@ -24,7 +24,7 @@ const lines: Line[] = [
   { id: 'greenhouse', category: 'flower', name: 'Greenhouse', potency: 1, sort: 4 },
   { id: 'foger-pods', category: 'vapes', brand: 'Foger', name: 'Foger Pods 30K', sort: 1 },
   { id: 'foger-battery', category: 'vapes', brand: 'Foger', name: 'Foger Battery', sort: 2 },
-  { id: 'gb-x2-25', category: 'vapes', brand: 'Geek Bar', name: 'Pulse 2', sort: 3 },
+  { id: 'gb-x2-25', category: 'vapes', brand: 'Geek Bar', name: 'Pulse 2 25K', sort: 3 },
   { id: 'gb-x2-50', category: 'vapes', brand: 'Geek Bar', name: 'Pulse X 2 50K', sort: 4 },
   { id: 'gb-mate-kit', category: 'vapes', brand: 'Geek Bar', name: 'Mate Kit 60K', sort: 5 },
   { id: 'gb-mate-pod', category: 'vapes', brand: 'Geek Bar', name: 'Mate Pod 60K', sort: 6 },
@@ -101,22 +101,24 @@ const products: Product[] = [
   ),
   vape('foger-battery', 'Switch Pro Battery', 15, 214, 72, 30, { photo: photo('foger-battery'), description: 'Rechargeable 1200mAh base for Foger 30K pods.' }),
 
-  // Geek Bar Pulse 2: ice, frozen, fruit, sour, then the Hubba edition (no official photos yet).
-  ...['White Gummy Ice', 'Juicy Peach Ice', 'Sour Apple Ice', 'Frozen White Grape', 'Stone Freeze', 'Dragon Melon', 'Strawberry Banana', 'Sour Gush', 'Fcuking FAB'].map(gb('gb-x2-25', 'pulse2', 22, 214, 72)),
-  ...['Grape Hubba', 'Lemon Hubba', 'Blue Razz Hubba', 'White Peach Hubba'].map((n, i) => vape('gb-x2-25', n, 22, [272, 47, 214, 330][i], [55, 92, 72, 72][i], 30)),
+  // Geek Bar Pulse 2 25K: ice, frozen, fruit, sour, then the Hubba edition.
+  ...['White Gummy Ice', 'Juicy Peach Ice', 'Sour Apple Ice', 'Frozen White Grape', 'Stone Freeze', 'Dragon Melon', 'Strawberry Banana', 'Sour Gush', 'Fcuking FAB'].map(gb('gb-x2-25', 'pulse2', 25.99, 214, 72)),
+  ...(['Grape Hubba', 'Lemon Hubba', 'Blue Razz Hubba', 'White Peach Hubba'] as const).map((n, i) =>
+    gb('gb-x2-25', 'pulse2', 25.99, [272, 47, 214, 26][i], [55, 92, 72, 88][i])(n),
+  ),
 
   // Geek Bar Pulse X 2: Fab, Bull, ice, slush, fruit.
-  ...['Orange Fcuking Fab', 'Sour Fcuking Fab'].map(gb('gb-x2-50', 'x2', 28, 26, 88)),
-  ...['Strawberry Bull', 'Blue Razz Bull', 'Coco Berry Bull', 'Peach Bull', 'Watermelon Bull'].map(gb('gb-x2-50', 'x2', 28, 2, 72)),
-  ...['Blue Razz Ice', 'Watermelon Ice', 'Wild Cherry Slush'].map(gb('gb-x2-50', 'x2', 28, 214, 72)),
-  ...['White Peach Raspberry', 'Pink & Blue', 'Blackberry Blueberry', 'Blue Rancher'].map(gb('gb-x2-50', 'x2', 28, 330, 72)),
+  ...['Orange Fcuking Fab', 'Sour Fcuking Fab'].map(gb('gb-x2-50', 'x2', 30, 26, 88)),
+  ...['Strawberry Bull', 'Blue Razz Bull', 'Coco Berry Bull', 'Peach Bull', 'Watermelon Bull'].map(gb('gb-x2-50', 'x2', 30, 2, 72)),
+  ...['Blue Razz Ice', 'Watermelon Ice', 'Wild Cherry Slush'].map(gb('gb-x2-50', 'x2', 30, 214, 72)),
+  ...['White Peach Raspberry', 'Pink & Blue', 'Blackberry Blueberry', 'Blue Rancher'].map(gb('gb-x2-50', 'x2', 30, 330, 72)),
 
   // Geek Bar Mate 60K kits and pods: mint/ice, fruit, lemonade.
   ...['Cool Mint', 'Blue Razz Ice', 'Sour Apple Ice', 'Watermelon Ice', 'Sky Blue Ice', 'Juicy Peach', 'Strawberry Banana', 'Triple Berry', 'Amazon Lemonade'].map(
     gb('gb-mate-kit', 'mate-kit', 30, 174, 58, { description: 'Battery and one pod, 60K puffs.' }),
   ),
   ...['Cool Mint', 'Blue Razz Ice', 'Sour Apple Ice', 'Watermelon Ice', 'Blue Straws', 'Juicy Peach', 'Strawberry Banana', 'Amazon Lemonade'].map(
-    gb('gb-mate-pod', 'mate-pod', 22, 174, 58, { description: 'Pod only. Fits the Mate battery.' }),
+    gb('gb-mate-pod', 'mate-pod', 22.99, 174, 58, { description: 'Pod only. Fits the Mate battery.' }),
   ),
 ].map((p, i) => ({ ...p, sort: i }));
 
@@ -150,7 +152,7 @@ export function createSeed(): DB {
       { id: 't-greenhouse', category: 'flower', label: 'Greenhouse', lineId: 'greenhouse', hue: 174, saturation: 58, intensity: 40 },
       { id: 't-foger-pods', category: 'vapes', label: 'Foger Pods', lineId: 'foger-pods', hue: 330, saturation: 72, intensity: 45 },
       { id: 't-foger-battery', category: 'vapes', label: 'Foger Battery', lineId: 'foger-battery', hue: 0, saturation: 0, intensity: 50 },
-      { id: 't-x2-25', category: 'vapes', label: 'Pulse 2', lineId: 'gb-x2-25', hue: 214, saturation: 72, intensity: 50 },
+      { id: 't-x2-25', category: 'vapes', label: 'Pulse 2 25K', lineId: 'gb-x2-25', hue: 214, saturation: 72, intensity: 50 },
       { id: 't-x2-50', category: 'vapes', label: 'Pulse X 2 50K', lineId: 'gb-x2-50', hue: 272, saturation: 55, intensity: 50 },
       { id: 't-mate-kit', category: 'vapes', label: 'Mate Kit 60K', lineId: 'gb-mate-kit', hue: 2, saturation: 72, intensity: 45 },
       { id: 't-mate-pod', category: 'vapes', label: 'Mate Pod 60K', lineId: 'gb-mate-pod', hue: 26, saturation: 88, intensity: 45 },
