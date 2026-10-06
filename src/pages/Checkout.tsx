@@ -5,6 +5,7 @@ import type { Fulfillment, Order } from '../data/types';
 import { lineLabel } from '../lib/catalog';
 import { money, money2, priceCart } from '../lib/pricing';
 import { clearCart } from '../lib/util';
+import { isCounted, setStock, stockText, usageByProduct } from '../lib/stock';
 import { AGE_CHECK_CONNECTED, verifyAge } from '../lib/ageCheck';
 import { Summary } from './Cart';
 
@@ -41,6 +42,13 @@ export default function Checkout() {
     setError('');
     if (t.belowMinimum > 0) return setError(`The minimum order is ${money(db.settings.minOrder)}. Add ${money2(t.belowMinimum)} more to check out.`);
     if (!ageOk) return setError('Confirm you are 21 or older to place the order.');
+    const needed = usageByProduct(t.lines.map((l) => l.line));
+    for (const [id, amount] of needed) {
+      const p = db.products.find((x) => x.id === id);
+      if (p && isCounted(p) && amount > p.stock!) {
+        return setError(`Only ${stockText(p).replace(' left', '')} of ${p.name} left. Lower the amount in your cart, then try again.`);
+      }
+    }
     const ageCheck = await verifyAge({ name: form.name, email: form.email, phone: form.phone });
     if (ageCheck === 'failed') return setError('We couldn’t verify your age, so this order can’t be placed. You can still shop in store with a valid ID.');
     const latest = getDB();
@@ -72,9 +80,17 @@ export default function Checkout() {
       status: 'new',
       ageCheck,
       note: form.note.trim() || undefined,
+      stockApplied: true,
     };
     updateDB((d) => {
       d.orders.unshift(order);
+      // Take what was bought out of the stock counts.
+      for (const [id, amount] of needed) {
+        const p = d.products.find((x) => x.id === id);
+        if (!p || !isCounted(p)) continue;
+        setStock(p, p.stock! - amount, d.settings);
+        p.lastOrderId = order.id;
+      }
     });
     clearCart();
     nav(`/order/${order.id}`, { replace: true });

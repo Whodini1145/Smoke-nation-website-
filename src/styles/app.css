@@ -755,6 +755,8 @@ main { outline: none; min-height: 60vh; }
 }
 .size input { position: absolute; opacity: 0; }
 .size.is-on { border-color: var(--green); background: var(--green-pale); }
+.size.is-off { opacity: 0.4; cursor: not-allowed; }
+.hint-low { color: #8a5a00; font-weight: 700; }
 .size:has(input:focus-visible) { outline: 3px solid var(--green); outline-offset: 2px; }
 .size-g { font-family: var(--display); font-weight: 800; font-size: 1.4rem; line-height: 1; }
 .size-p { font-weight: 700; font-size: 0.9rem; }

@@ -19,9 +19,24 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isStaff();
     }
+    // Shoppers may lower a product's stock count only in the same write that
+    // places the order using it (the order must not exist before, and must after).
+    function stockFromNewOrder() {
+      let d = request.resource.data;
+      let o = resource.data;
+      return d.diff(o).affectedKeys().hasOnly(['stock', 'status', 'lastOrderId'])
+        && d.stock is number && o.stock is number
+        && d.stock >= 0 && d.stock < o.stock && o.stock - d.stock <= 500
+        && d.status in ['in', 'low', 'out']
+        && d.lastOrderId is string
+        && !exists(path('orders/' + d.lastOrderId))
+        && existsAfter(path('orders/' + d.lastOrderId));
+    }
+
     match /products/{id} {
       allow read: if true;
-      allow write: if isStaff();
+      allow create, delete: if isStaff();
+      allow update: if isStaff() || stockFromNewOrder();
     }
     match /photos/{id} {
       allow read: if true;

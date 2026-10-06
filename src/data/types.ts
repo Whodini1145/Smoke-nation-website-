@@ -35,6 +35,10 @@ export interface Product {
   salePrice?: number;
   saleSizePrices?: SizePrices;
   status: StockStatus;
+  /** How many are on hand: units for vapes, grams for flower. Blank = not counted (status is set by hand). */
+  stock?: number;
+  /** The order that last lowered `stock` (lets the database check stock changes made by customers). */
+  lastOrderId?: string;
   bestSeller: boolean;
   /** Card color: hue 0–360 from the preset swatches, intensity 0–100 (lighter → darker). */
   hue: number;
@@ -98,6 +102,9 @@ export interface Settings {
   shippingFee: number;
   freeShippingOver: number; // 0 = never free
   minOrder: number; // 0 = none
+  /** Counted items show "Running low" at or below these amounts. */
+  lowStockUnits: number;
+  lowStockGrams: number;
   shippingAllowed: Record<CategoryId, boolean>;
   rating: number;
   reviewCount: number;
@@ -152,6 +159,8 @@ export interface Order {
   status: OrderStatus;
   note?: string;
   ageCheck?: 'passed' | 'failed' | 'not_connected';
+  /** True once this order's items were taken out of stock counts. */
+  stockApplied?: boolean;
 }
 
 export interface Account {

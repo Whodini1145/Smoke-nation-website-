@@ -4,6 +4,7 @@ import { resetDB, updateDB, updateSession, useDB, useSession, USE_FIREBASE } fro
 import { addStaff, changeMyPassword, friendlyError, removeStaff } from '../../data/accounts';
 import type { Settings } from '../../data/types';
 import { MoneyInput } from './shared';
+import { isCounted, setStock } from '../../lib/stock';
 
 function NumberField({ label, value, suffix, onChange, step = 0.01 }: { label: string; value: number; suffix: string; onChange: (n: number) => void; step?: number }) {
   return (
@@ -104,6 +105,12 @@ export default function SettingsTab() {
   const db = useDB();
   const s = db.settings;
   const set = (patch: Partial<Settings>) => updateDB((d) => Object.assign(d.settings, patch));
+  // New thresholds re-check every counted product's status.
+  const setThresholds = (patch: Partial<Settings>) =>
+    updateDB((d) => {
+      Object.assign(d.settings, patch);
+      for (const p of d.products) if (isCounted(p)) setStock(p, p.stock, d.settings);
+    });
 
   return (
     <div className="tab">
@@ -128,6 +135,15 @@ export default function SettingsTab() {
           </label>
           <p className="fine">Unchecked categories are pickup only. Check federal (PACT Act) and carrier rules before turning vape shipping on.</p>
         </fieldset>
+      </section>
+
+      <section className="admin-section">
+        <h2 className="h-section">Stock counts</h2>
+        <p className="fine">Products with a stock count show "Running low" at or below these amounts, and "Sold out" at zero. Online orders count down by themselves. Use the −1 button in Products for in-store sales.</p>
+        <div className="settings-grid">
+          <NumberField label="Vapes: running low at" value={s.lowStockUnits} suffix="left" step={1} onChange={(lowStockUnits) => setThresholds({ lowStockUnits })} />
+          <NumberField label="Flower: running low at" value={s.lowStockGrams} suffix="grams" step={0.5} onChange={(lowStockGrams) => setThresholds({ lowStockGrams })} />
+        </div>
       </section>
 
       <section className="admin-section">

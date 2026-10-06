@@ -4,6 +4,7 @@ import type { OrderStatus } from '../../data/types';
 import { money2 } from '../../lib/pricing';
 import { OrderItems, OrderTotals, STATUS_TEXT } from '../Account';
 import { AGE_CHECK_TEXT } from '../../lib/ageCheck';
+import { isCounted, setStock, usage } from '../../lib/stock';
 
 const FILTERS: { id: 'open' | 'all' | OrderStatus; label: string }[] = [
   { id: 'open', label: 'Open' },
@@ -13,6 +14,22 @@ const FILTERS: { id: 'open' | 'all' | OrderStatus; label: string }[] = [
 ];
 
 const when = (t: number) => new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+/** Cancelling an order puts its items back in stock; un-cancelling takes them out again. */
+function changeStatus(id: string, status: OrderStatus) {
+  updateDB((d) => {
+    const o = d.orders.find((x) => x.id === id)!;
+    const wasCancelled = o.status === 'cancelled';
+    o.status = status;
+    const sign = !wasCancelled && status === 'cancelled' && o.stockApplied ? 1 : wasCancelled && status !== 'cancelled' && !o.stockApplied ? -1 : 0;
+    if (!sign) return;
+    for (const it of o.items) {
+      const p = d.products.find((x) => x.id === it.productId);
+      if (p && isCounted(p)) setStock(p, p.stock! + sign * usage(it.size, it.qty), d.settings);
+    }
+    o.stockApplied = sign < 0;
+  });
+}
 
 export default function OrdersTab() {
   const db = useDB();
@@ -67,7 +84,7 @@ export default function OrdersTab() {
                 <OrderTotals order={o} />
                 <label>
                   <span className="field-label">Status</span>
-                  <select value={o.status} onChange={(e) => updateDB((d) => (d.orders.find((x) => x.id === o.id)!.status = e.target.value as OrderStatus))}>
+                  <select value={o.status} onChange={(e) => changeStatus(o.id, e.target.value as OrderStatus)}>
                     {(Object.keys(STATUS_TEXT) as OrderStatus[])
                       .filter((s) => (o.fulfillment === 'ship' ? s !== 'picked_up' && s !== 'ready' : s !== 'shipped'))
                       .map((s) => (

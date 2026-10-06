@@ -5,6 +5,7 @@ import { useCart, useDB } from '../data/store';
 import { lineLabel } from '../lib/catalog';
 import { dealLabel, money, money2, priceCart, type CartTotals } from '../lib/pricing';
 import { setLineQty } from '../lib/util';
+import { maxAddable } from '../lib/stock';
 import type { DB } from '../data/types';
 
 /** "Add 1 more to get Buy 2 for $35" for deals the cart is close to. */
@@ -101,7 +102,7 @@ export default function Cart() {
                       <MinusIcon />
                     </button>
                     <output>{l.line.qty}</output>
-                    <button type="button" onClick={() => setLineQty(l.line.key, l.line.qty + 1)} aria-label={`Add one ${l.product.name}`}>
+                    <button type="button" onClick={() => setLineQty(l.line.key, l.line.qty + 1)} aria-label={`Add one ${l.product.name}`} disabled={maxAddable(l.product, l.line.size, cart) < 1}>
                       <PlusIcon />
                     </button>
                   </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useDB } from '../data/store';
+import { useCart, useDB } from '../data/store';
+import { isCounted, maxAddable, stockText } from '../lib/stock';
 import { FLOWER_SIZES, type FlowerSize, type Product } from '../data/types';
 import { FLOWER_DISCLAIMER } from '../data/seed';
 import { lineLabel } from '../lib/catalog';
@@ -11,6 +12,7 @@ import { DealBar, PotencyBars, ProductArt } from './ProductCard';
 
 export function ProductSheet({ product, onClose }: { product: Product | null; onClose: () => void }) {
   const db = useDB();
+  const cart = useCart();
   const [size, setSize] = useState<FlowerSize | undefined>();
   const [qty, setQty] = useState(1);
 
@@ -29,7 +31,8 @@ export function ProductSheet({ product, onClose }: { product: Product | null; on
   const reg = regularPrice(product, isFlower ? size : undefined);
   const deals = isFlower ? [] : dealsFor(product.id, db.deals);
   const out = product.status === 'out';
-  const canAdd = !out && now !== undefined && (!isFlower || !!size);
+  const room = maxAddable(product, isFlower ? size : undefined, cart);
+  const canAdd = !out && now !== undefined && (!isFlower || !!size) && room >= qty;
 
   function add() {
     if (!product || !canAdd) return;
@@ -59,8 +62,8 @@ export function ProductSheet({ product, onClose }: { product: Product | null; on
               {sizes.map((s) => {
                 const p = unitPrice(product, s)!;
                 return (
-                  <label key={s} className={`size${size === s ? ' is-on' : ''}`}>
-                    <input type="radio" name="size" value={s} checked={size === s} onChange={() => setSize(s)} />
+                  <label key={s} className={`size${size === s ? ' is-on' : ''}${maxAddable(product, s, cart) < 1 ? ' is-off' : ''}`}>
+                    <input type="radio" name="size" value={s} checked={size === s} disabled={maxAddable(product, s, cart) < 1} onChange={() => { setSize(s); setQty(1); }} />
                     <span className="size-g">{s}</span>
                     <span className="size-p">
                       {isDiscounted(product, s) && <s>{money(regularPrice(product, s)!)}</s>} {money(p)}
@@ -77,7 +80,7 @@ export function ProductSheet({ product, onClose }: { product: Product | null; on
                 <MinusIcon />
               </button>
               <output aria-live="polite">{qty}</output>
-              <button type="button" onClick={() => setQty((q) => Math.min(20, q + 1))} aria-label="One more">
+              <button type="button" onClick={() => setQty((q) => Math.min(Math.max(1, room), q + 1))} aria-label="One more" disabled={qty >= room}>
                 <PlusIcon />
               </button>
             </div>
@@ -89,6 +92,8 @@ export function ProductSheet({ product, onClose }: { product: Product | null; on
               )}
             </button>
           </div>
+          {!out && isCounted(product) && product.status === 'low' && <p className="hint hint-low">Only {stockText(product)}.</p>}
+          {!out && room < 1 && <p className="hint">You have all we have of this in your cart.</p>}
           {deals.length > 0 && <p className="hint">Deal price is applied in your cart. Mix any flavors in the deal.</p>}
         </div>
       </div>

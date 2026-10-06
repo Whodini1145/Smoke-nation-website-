@@ -8,7 +8,10 @@ import slidePulseX2 from '../assets/slide-pulse-x2.jpg';
 // Official product photos from Geek Bar (geekbar.com) and Foger (fogertech.com).
 const photos = import.meta.glob<string>('../assets/products/*.webp', { eager: true, import: 'default' });
 const photo = (name: string) => photos[`../assets/products/${name}.webp`];
+const fogerPhotos = import.meta.glob<string>('../assets/products/foger/*.webp', { eager: true, import: 'default' });
+const fogerPhoto = (slug: string) => fogerPhotos[`../assets/products/foger/${slug}.webp`];
 import type { DB, Line, Product, SizePrices } from './types';
+import { FOGER_FLAVORS } from './fogerFlavors';
 
 // Starting content. Product names and every price below are placeholders so the
 // site has something to show — replace them from the admin panel.
@@ -85,14 +88,13 @@ const products: Product[] = [
   flower('greenhouse', 'Sample Greenhouse One', 96, 55, 35),
   flower('greenhouse', 'Sample Greenhouse Two', 24, 38, 40, { status: 'out' }),
 
-  vape('foger-pods', 'Strawberry Ice', 20, 272, 55, 30, { photo: photo('foger-strawberry-ice'), bestSeller: true }),
-  vape('foger-pods', 'Strawberry Cupcake', 20, 2, 72, 40, { photo: photo('foger-strawberry-cupcake') }),
-  vape('foger-pods', 'Frozen Watermelon', 20, 330, 72, 30, { photo: photo('foger-frozen-watermelon'), bestSeller: true }),
-  vape('foger-pods', 'Strawberry Mango', 20, 26, 88, 35, { photo: photo('foger-strawberry-mango') }),
-  vape('foger-pods', 'Miami Mint', 20, 174, 58, 40, { photo: photo('foger-miami-mint') }),
-  vape('foger-pods', 'Cola Slush', 20, 2, 72, 45, { photo: photo('foger-cola-slush') }),
-  vape('foger-pods', 'Grape Slush', 20, 272, 55, 45, { photo: photo('foger-grape-slush'), status: 'low' }),
-  vape('foger-pods', 'Frozen Blueberry', 20, 214, 72, 45, { photo: photo('foger-frozen-blueberry') }),
+  ...FOGER_FLAVORS.map((f) =>
+    vape('foger-pods', f.name, 20, f.hue, f.saturation, 30, {
+      photo: fogerPhoto(f.slug),
+      status: f.status,
+      bestSeller: ['Blue Razz Ice', 'Frozen Watermelon', 'Miami Mint'].includes(f.name),
+    }),
+  ),
   vape('foger-battery', 'Switch Pro Battery', 15, 214, 72, 30, { photo: photo('foger-battery'), description: 'Rechargeable 1200mAh base for Foger 30K pods.' }),
   vape('gb-x2-25', 'Blue Razz Ice', 22, 214, 72, 40, { photo: photo('px-blue-razz-ice'), bestSeller: true }),
   vape('gb-x2-25', 'Watermelon Ice', 22, 330, 72, 35, { photo: photo('px-watermelon-ice') }),
@@ -154,6 +156,8 @@ export function createSeed(): DB {
       shippingFee: 10,
       freeShippingOver: 0,
       minOrder: 0,
+      lowStockUnits: 3,
+      lowStockGrams: 14,
       shippingAllowed: { flower: true, vapes: false },
       rating: 4.7,
       reviewCount: 40,

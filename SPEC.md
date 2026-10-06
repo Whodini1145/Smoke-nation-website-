@@ -108,6 +108,15 @@ These decisions were made after the original spec and **override it where they c
 - Vercel: allows legal products, but the free Hobby plan is for personal, non-commercial sites. A store needs Vercel Pro (about $20/month).
 - Supabase: its acceptable use policy bans selling "controlled substances" and "drug paraphernalia". Hemp THCA is legal under hemp law but a gray area, so there is some risk of the account being flagged. Owner to decide.
 
+### Stock counts (added 2026-10-06)
+- Any product can have a stock count: units for vapes, grams for flower. Blank = not counted (status set by hand, as before).
+- Online orders subtract automatically; counted items switch to "Running low" at the Settings thresholds (default 3 vapes / 14g) and "Sold out" at zero. Shoppers can't add more than what's left.
+- Staff use the −1 / +1 buttons in Admin → Products for in-store sales and restocks, or set counts for many items at once (bulk Stock → Set count). Cancelling an order puts its items back.
+
+### Foger flavors (added 2026-10-06)
+- 70 Foger Switch Pro 30K pod flavors in the starter catalog (59 in stock, 11 sold out) with official names and photos from fogertech.com. Placeholder price $20, all in the sample 2-for-$35 deal.
+- Names corrected to Foger's official spelling: Mexico Mango, Lime Berry Orange, Pink & Blue, Peach Berries Refresher, Dragon Melon, Frozen Banana, Blueberry Cotton Candy, Strawnana Ice Cream.
+
 ### Still to be decided
 - Shipping cost model, minimum order, payment processor, order notifications (email/text), domain name, admin link final placement.
 

@@ -172,3 +172,8 @@
 .order-detail { display: grid; gap: 14px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
 .order-contact { display: grid; gap: 4px; }
 .order-contact p { margin: 0; }
+
+.tag-count { background: var(--green-pale); color: var(--green-deep); }
+.stock-stepper { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.9rem; }
+.stock-stepper .btn { min-width: 44px; padding: 0 10px; }
+.counted-status { align-self: end; margin: 0 0 12px; }

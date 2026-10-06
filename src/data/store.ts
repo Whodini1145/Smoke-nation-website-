@@ -9,7 +9,7 @@ import type { CartLine, DB } from './types';
 
 export const USE_FIREBASE = import.meta.env.MODE !== 'preview' && import.meta.env.MODE !== 'test';
 
-const DB_KEY = 'sn-db-v3';
+const DB_KEY = 'sn-db-v4';
 const CART_KEY = 'sn-cart-v2';
 const SESSION_KEY = 'sn-session-v1';
 

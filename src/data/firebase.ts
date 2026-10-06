@@ -12,6 +12,7 @@ import {
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   initializeFirestore,
@@ -131,21 +132,34 @@ async function save(prev: DB, next: DB) {
     b.add((batch) => batch.set(doc(fs, 'site', 'config'), cfg));
   }
 
+  // New orders go in the same batch as the stock they use, so the database
+  // can check that customers only lower stock by placing an order.
+  const oldOrders = new Map(prev.orders.map((o) => [o.id, o]));
+  for (const o of next.orders) {
+    const old = oldOrders.get(o.id);
+    if (!old) b.add((batch) => batch.set(doc(fs, 'orders', o.id), o));
+    else if (old.status !== o.status || old.stockApplied !== o.stockApplied)
+      b.add((batch) => batch.update(doc(fs, 'orders', o.id), { status: o.status, stockApplied: o.stockApplied ?? false }));
+  }
+
+  const STOCK_KEYS = new Set(['stock', 'status', 'lastOrderId']);
   const before = new Map(prev.products.map((p) => [p.id, p]));
   for (const p of next.products) {
-    if (same(before.get(p.id), p)) continue;
+    const old = before.get(p.id);
+    if (same(old, p)) continue;
+    const changed = old ? [...new Set([...Object.keys(old), ...Object.keys(p)])].filter((k) => !same(old[k as keyof Product], p[k as keyof Product])) : null;
+    if (changed && changed.every((k) => STOCK_KEYS.has(k))) {
+      // Stock-only change: update just those fields.
+      const patch: Record<string, unknown> = {};
+      for (const k of changed) patch[k] = p[k as keyof Product] ?? deleteField();
+      b.add((batch) => batch.update(doc(fs, 'products', p.id), patch));
+      continue;
+    }
     const clean = { ...p, photo: storePhoto(b, p.photo) };
     b.add((batch) => batch.set(doc(fs, 'products', p.id), clean));
   }
   const kept = new Set(next.products.map((p) => p.id));
   for (const id of before.keys()) if (!kept.has(id)) b.add((batch) => batch.delete(doc(fs, 'products', id)));
-
-  const oldOrders = new Map(prev.orders.map((o) => [o.id, o]));
-  for (const o of next.orders) {
-    const old = oldOrders.get(o.id);
-    if (!old) await setDoc(doc(fs, 'orders', o.id), o);
-    else if (old.status !== o.status) b.add((batch) => batch.update(doc(fs, 'orders', o.id), { status: o.status }));
-  }
 
   await b.commit();
 }

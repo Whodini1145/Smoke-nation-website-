@@ -7,6 +7,7 @@ import { FLOWER_SIZES, type Line, type Product, type SizePrices, type StockStatu
 import { cardBackground } from '../../lib/color';
 import { linesOf } from '../../lib/catalog';
 import { fromPrice, isDiscounted, money } from '../../lib/pricing';
+import { isCounted, setStock, stockText } from '../../lib/stock';
 import { ColorPicker, MoneyInput, PhotoField, confirmDelete } from './shared';
 import { LineNav, type LineSel } from './LineNav';
 
@@ -91,13 +92,38 @@ function ProductEditor({ initial, line, isNew, onDone }: { initial: Product; lin
         </label>
         <div className="field-pair">
           <label>
-            <span className="field-label">Stock</span>
-            <select value={p.status} onChange={(e) => set({ status: e.target.value as StockStatus })}>
-              {(['in', 'low', 'out'] as StockStatus[]).map((s) => (
-                <option key={s} value={s}>{STATUS_LABEL[s]}</option>
-              ))}
-            </select>
+            <span className="field-label">{isFlower ? 'Grams in stock' : 'How many in stock'} (blank = don't count)</span>
+            <input
+              inputMode="decimal"
+              value={p.stock ?? ''}
+              placeholder="Not counted"
+              onChange={(e) => {
+                const v = e.target.value.trim();
+                const n = parseFloat(v);
+                setP((x) => {
+                  const next = { ...x };
+                  setStock(next, v === '' || !Number.isFinite(n) ? undefined : n, db.settings);
+                  return next;
+                });
+              }}
+            />
           </label>
+          {isCounted(p) ? (
+            <p className="fine counted-status">
+              Shows as <strong>{STATUS_LABEL[p.status]}</strong>. It updates by itself as orders come in.
+            </p>
+          ) : (
+            <label>
+              <span className="field-label">Stock</span>
+              <select value={p.status} onChange={(e) => set({ status: e.target.value as StockStatus })}>
+                {(['in', 'low', 'out'] as StockStatus[]).map((s) => (
+                  <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        <div className="field-pair">
           <label>
             <span className="field-label">Product line</span>
             <select value={p.lineId} onChange={(e) => set({ lineId: e.target.value })}>
@@ -137,6 +163,7 @@ function BulkBar({ ids, isFlower, onClear }: { ids: string[]; isFlower: boolean;
   const [price, setPrice] = useState<number | undefined>();
   const [sizes, setSizes] = useState<SizePrices>({});
   const [percent, setPercent] = useState('');
+  const [count, setCount] = useState('');
   const vapeDeals = db.deals;
   const [dealId, setDealId] = useState(vapeDeals[0]?.id ?? '');
   const n = ids.length;
@@ -237,8 +264,33 @@ function BulkBar({ ids, isFlower, onClear }: { ids: string[]; isFlower: boolean;
 
       {action === 'stock' && (
         <div className="bulk-panel">
+          <label className="money">
+            <span className="field-label">{isFlower ? 'Set grams in stock' : 'Set how many in stock'}</span>
+            <span className="money-box">
+              <input inputMode="decimal" value={count} onChange={(e) => setCount(e.target.value)} />
+            </span>
+          </label>
+          <button
+            type="button"
+            className="btn btn-primary btn-small"
+            disabled={!(parseFloat(count) >= 0)}
+            onClick={() => apply((p) => setStock(p, parseFloat(count), db.settings), `Set the count on ${items}`)}
+          >
+            Set count
+          </button>
+          <span className="fine">or set by hand:</span>
           {(['in', 'low', 'out'] as StockStatus[]).map((s) => (
-            <button key={s} type="button" className="btn btn-ghost btn-small" onClick={() => apply((p) => (p.status = s), `Marked ${items} ${STATUS_LABEL[s].toLowerCase()}`)}>
+            <button
+              key={s}
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={() =>
+                apply((p) => {
+                  delete p.stock;
+                  p.status = s;
+                }, `Marked ${items} ${STATUS_LABEL[s].toLowerCase()}`)
+              }
+            >
               {STATUS_LABEL[s]}
             </button>
           ))}
@@ -408,6 +460,12 @@ export default function ProductsTab() {
       return n;
     });
   const quick = (id: string, patch: Partial<Product>) => updateDB((d) => Object.assign(d.products.find((p) => p.id === id)!, patch));
+  // In-store sales and restocks: nudge a counted product up or down.
+  const count = (id: string, delta: number) =>
+    updateDB((d) => {
+      const p = d.products.find((x) => x.id === id)!;
+      setStock(p, (p.stock ?? 0) + delta, d.settings);
+    });
 
   return (
     <div className="tab">
@@ -449,6 +507,7 @@ export default function ProductsTab() {
                         <span className="row-meta">
                           {price !== undefined ? `${p.sizePrices ? 'from ' : ''}${money(price)}` : 'No price'}
                           {(p.sizePrices ? Object.keys(p.sizePrices).some((s) => isDiscounted(p, s as never)) : isDiscounted(p)) && <span className="tag tag-sale">On sale</span>}
+                          {isCounted(p) && <span className="tag tag-count">{stockText(p)}</span>}
                           {p.status !== 'in' && <span className={`tag tag-${p.status}`}>{STATUS_LABEL[p.status]}</span>}
                           {p.bestSeller && <span className="tag">Best seller</span>}
                           {deals.map((d) => <span key={d.id} className="tag tag-deal">{d.name}</span>)}
@@ -459,8 +518,18 @@ export default function ProductsTab() {
                       </div>
                       <div className="row-actions">
                         <button type="button" className="btn btn-small btn-ghost" onClick={() => { setEditing(p.id); setAdding(null); }}>Edit</button>
-                        <button type="button" className={`btn btn-small btn-toggle${p.status === 'low' ? ' is-on-low' : ''}`} aria-pressed={p.status === 'low'} onClick={() => quick(p.id, { status: p.status === 'low' ? 'in' : 'low' })}>Low stock</button>
-                        <button type="button" className={`btn btn-small btn-toggle${p.status === 'out' ? ' is-on-out' : ''}`} aria-pressed={p.status === 'out'} onClick={() => quick(p.id, { status: p.status === 'out' ? 'in' : 'out' })}>Sold out</button>
+                        {isCounted(p) ? (
+                          <span className="stock-stepper" aria-label={`Stock for ${p.name}`}>
+                            <button type="button" className="btn btn-small btn-ghost" onClick={() => count(p.id, -1)} aria-label="Sold one in store">−1</button>
+                            <span>{stockText(p)}</span>
+                            <button type="button" className="btn btn-small btn-ghost" onClick={() => count(p.id, 1)} aria-label="Add one">+1</button>
+                          </span>
+                        ) : (
+                          <>
+                            <button type="button" className={`btn btn-small btn-toggle${p.status === 'low' ? ' is-on-low' : ''}`} aria-pressed={p.status === 'low'} onClick={() => quick(p.id, { status: p.status === 'low' ? 'in' : 'low' })}>Low stock</button>
+                            <button type="button" className={`btn btn-small btn-toggle${p.status === 'out' ? ' is-on-out' : ''}`} aria-pressed={p.status === 'out'} onClick={() => quick(p.id, { status: p.status === 'out' ? 'in' : 'out' })}>Sold out</button>
+                          </>
+                        )}
                         <button
                           type="button"
                           className="btn btn-small btn-ghost danger"
