@@ -77,18 +77,18 @@ function vape(lineId: string, name: string, price: number, hue: number, saturati
 }
 
 const STRAIN_COLOR: Record<Strain, [number, number]> = { indica: [272, 55], hybrid: [96, 55], sativa: [26, 88] };
-// Bud photos: most taken in the shop; Donny Burger, Blue Lobster, Candy Rings, Durban Poison from Leafly/THCA listings (shop will retake).
+// Bud photos: most taken in the shop; Blue Lobster, Candy Rings, Durban Poison from Leafly/THCA listings (shop will retake).
 const BUD_PHOTO: Record<string, string> = {
   'High Roller': 'high-roller',
   'Black Zebra': 'black-zebra',
   'New Money': 'new-money',
   'Godfather OG': 'godfather-og',
-  'Donny Burger': 'donny-burger',
+  'Donny Burger': 'donny-burger-shop',
   'Biscotti': 'biscotti',
   'Warheads': 'warheads',
   'Crunch Berries': 'crunch-berries',
   'Blue Lobster': 'blue-lobster',
-  'Blue Gummy': 'blue-gummy',
+  'Blue Gummy': 'blue-gummy-shop',
   'Motor Breath': 'motor-breath-shop',
   '"It\'s a Secret"': 'its-a-secret',
   'Purple Hulk': 'purple-hulk-shop',
