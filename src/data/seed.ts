@@ -77,23 +77,23 @@ function vape(lineId: string, name: string, price: number, hue: number, saturati
 }
 
 const STRAIN_COLOR: Record<Strain, [number, number]> = { indica: [272, 55], hybrid: [96, 55], sativa: [26, 88] };
-// Bud photos, all taken in the shop on white paper (Oct 2026) and cut out with the same settings.
+// Bud photos, all taken in the shop on white paper (Oct 2026) and cut out gently so frosty edges stay on.
 const BUD_PHOTO: Record<string, string> = {
-  'High Roller': 'high-roller',
-  'Black Zebra': 'black-zebra',
-  'New Money': 'new-money',
-  'Godfather OG': 'godfather-og',
-  'Donny Burger': 'donny-burger-shop',
-  'Biscotti': 'biscotti',
-  'Warheads': 'warheads',
-  'Crunch Berries': 'crunch-berries',
-  'Blue Lobster': 'blue-lobster-shop',
-  'Blue Gummy': 'blue-gummy-shop',
-  'Motor Breath': 'motor-breath-shop',
-  '"It\'s a Secret"': 'its-a-secret',
-  'Purple Hulk': 'purple-hulk-shop',
-  'Candy Rings': 'candy-rings-shop',
-  'Durban Poison': 'durban-poison-shop',
+  'High Roller': 'high-roller-v2',
+  'Black Zebra': 'black-zebra-v2',
+  'New Money': 'new-money-v2',
+  'Godfather OG': 'godfather-og-v2',
+  'Donny Burger': 'donny-burger-v2',
+  'Biscotti': 'biscotti-v2',
+  'Warheads': 'warheads-v2',
+  'Crunch Berries': 'crunch-berries-v2',
+  'Blue Lobster': 'blue-lobster-v2',
+  'Blue Gummy': 'blue-gummy-v2',
+  'Motor Breath': 'motor-breath-v2',
+  '"It\'s a Secret"': 'its-a-secret-v2',
+  'Purple Hulk': 'purple-hulk-v2',
+  'Candy Rings': 'candy-rings-v2',
+  'Durban Poison': 'durban-poison-v2',
 };
 const exotic = (name: string, strain: Strain) =>
   flower('exotics', name, ...STRAIN_COLOR[strain], 45, { strain, description: '', ...(BUD_PHOTO[name] ? { photo: photo(`flower/${BUD_PHOTO[name]}`) } : {}) });
