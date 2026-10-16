@@ -77,7 +77,7 @@ function vape(lineId: string, name: string, price: number, hue: number, saturati
 }
 
 const STRAIN_COLOR: Record<Strain, [number, number]> = { indica: [272, 55], hybrid: [96, 55], sativa: [26, 88] };
-// Bud photos: most taken in the shop; Blue Lobster, Candy Rings, Durban Poison from Leafly/THCA listings (shop will retake).
+// Bud photos, all taken in the shop on white paper (Oct 2026) and cut out with the same settings.
 const BUD_PHOTO: Record<string, string> = {
   'High Roller': 'high-roller',
   'Black Zebra': 'black-zebra',
@@ -87,13 +87,13 @@ const BUD_PHOTO: Record<string, string> = {
   'Biscotti': 'biscotti',
   'Warheads': 'warheads',
   'Crunch Berries': 'crunch-berries',
-  'Blue Lobster': 'blue-lobster',
+  'Blue Lobster': 'blue-lobster-shop',
   'Blue Gummy': 'blue-gummy-shop',
   'Motor Breath': 'motor-breath-shop',
   '"It\'s a Secret"': 'its-a-secret',
   'Purple Hulk': 'purple-hulk-shop',
-  'Candy Rings': 'candy-rings',
-  'Durban Poison': 'durban-poison',
+  'Candy Rings': 'candy-rings-shop',
+  'Durban Poison': 'durban-poison-shop',
 };
 const exotic = (name: string, strain: Strain) =>
   flower('exotics', name, ...STRAIN_COLOR[strain], 45, { strain, description: '', ...(BUD_PHOTO[name] ? { photo: photo(`flower/${BUD_PHOTO[name]}`) } : {}) });
