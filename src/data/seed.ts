@@ -77,8 +77,15 @@ function vape(lineId: string, name: string, price: number, hue: number, saturati
 }
 
 const STRAIN_COLOR: Record<Strain, [number, number]> = { indica: [272, 55], hybrid: [96, 55], sativa: [26, 88] };
-// Bud photos (Leafly). Strains without one keep the placeholder until the shop adds a photo.
-const BUD_PHOTO: Record<string, string> = { 'Blue Lobster': 'blue-lobster', 'Durban Poison': 'durban-poison' };
+// Bud photos (Leafly and THCA shop listings). Strains without one keep the placeholder until the shop adds a photo.
+const BUD_PHOTO: Record<string, string> = {
+  'Donny Burger': 'donny-burger',
+  'Blue Lobster': 'blue-lobster',
+  'Motor Breath': 'motor-breath',
+  'Purple Hulk': 'purple-hulk',
+  'Candy Rings': 'candy-rings',
+  'Durban Poison': 'durban-poison',
+};
 const exotic = (name: string, strain: Strain) =>
   flower('exotics', name, ...STRAIN_COLOR[strain], 45, { strain, description: '', ...(BUD_PHOTO[name] ? { photo: photo(`flower/${BUD_PHOTO[name]}`) } : {}) });
 
@@ -184,8 +191,8 @@ export function createSeed(): DB {
       lowStockUnits: 3,
       lowStockGrams: 14,
       shippingAllowed: { flower: true, vapes: false },
-      rating: 4.7,
-      reviewCount: 40,
+      rating: 5,
+      reviewCount: 44,
       menuIntensity: 85,
       phone: '',
       email: '',
