@@ -77,8 +77,10 @@ function vape(lineId: string, name: string, price: number, hue: number, saturati
 }
 
 const STRAIN_COLOR: Record<Strain, [number, number]> = { indica: [272, 55], hybrid: [96, 55], sativa: [26, 88] };
+// Bud photos (Leafly). Strains without one keep the placeholder until the shop adds a photo.
+const BUD_PHOTO: Record<string, string> = { 'Blue Lobster': 'blue-lobster', 'Durban Poison': 'durban-poison' };
 const exotic = (name: string, strain: Strain) =>
-  flower('exotics', name, ...STRAIN_COLOR[strain], 45, { strain, description: '' });
+  flower('exotics', name, ...STRAIN_COLOR[strain], 45, { strain, description: '', ...(BUD_PHOTO[name] ? { photo: photo(`flower/${BUD_PHOTO[name]}`) } : {}) });
 
 const gb = (lineId: string, file: string, price: number, hue: number, saturation: number, extra: Partial<Product> = {}) =>
   (name: string) => vape(lineId, name, price, hue, saturation, 30, { photo: photo(`geekbar/${file}-${slug(name)}`), ...extra });
@@ -140,10 +142,26 @@ export function createSeed(): DB {
       { id: 's-vapes', photo: vapeWall, caption: 'Foger and Geek Bar, every flavor we stock', link: '/shop/vapes', linkLabel: 'Shop vapes' },
       { id: 's-case', photo: geekbarCase, caption: 'Every Geek Bar flavor, behind the glass', link: '/shop/vapes/gb-x2-25', linkLabel: 'Shop Geek Bar' },
     ],
+    // Real Google reviews (all 5 stars), picked by the manager in Oct 2026.
     reviews: [
-      { id: 'r1', name: 'Sample reviewer', stars: 5, text: 'Placeholder review. Paste a real review from your Google listing in Admin → Home screen.' },
-      { id: 'r2', name: 'Sample reviewer', stars: 5, text: 'Placeholder review. Featured reviews show here as a row people can swipe through.' },
-      { id: 'r3', name: 'Sample reviewer', stars: 4, text: 'Placeholder review. Remove these once your real ones are in.' },
+      { id: 'g1', name: "McKay Robertson", stars: 5, text: "This place is a hidden gem. The staff is friendly, fun and knowledgeable. The store itself is spacious, having everything you'd need and nothing you don't." },
+      { id: 'g2', name: "Alycia Souza", stars: 5, text: "Love that we have a local place like this, it's better than other shops in bigger cities. Selection is great. The staff are amazing! Highly recommend!" },
+      { id: 'g3', name: "Tyler Burchett", stars: 5, text: "Great place with everything. Great service. There's always a deal on something. Most of all, the service is impeccable." },
+      { id: 'g4', name: "Bonnie Steel", stars: 5, text: "This place has the best customer service. Get what you need without driving far to get it. Lifetime customer here!" },
+      { id: 'g5', name: "Brooke Woods", stars: 5, text: "I love this place so much! They have everything I need and recommend amazing stuff!! 10/10 would come here again." },
+      { id: 'g6', name: "Amber", stars: 5, text: "Nice place, good variety. The young man that helped me out Adam, kinda reminded me of my son. Friendly attitude and good customer service." },
+      { id: 'g7', name: "kendyl buchanan", stars: 5, text: "adam was super helpful ! good prices and lots of options i will definitely be coming back" },
+      { id: 'g8', name: "Angel Nadine", stars: 5, text: "Awesome customer service. Wide variety of product and convenient hours of operation!" },
+      { id: 'g9', name: "Trinity Smithwick", stars: 5, text: "I'm in here all the time! I always get great service, such a friendly staff !" },
+      { id: 'g10', name: "Melody Sanford", stars: 5, text: "Best smoke shop around! Good prices and great service" },
+      { id: 'g11', name: "Laura Woods", stars: 5, text: "I always stop by here and the staff are very nice and they have good prices" },
+      { id: 'g12', name: "Incredible Nails", stars: 5, text: "Great customer service always friendly have anything you are looking for" },
+      { id: 'g13', name: "Dominic Fisher", stars: 5, text: "This place is great! Great prices as well!" },
+      { id: 'g14', name: "Tom Hiddel", stars: 5, text: "A good place and the workers are always very nice." },
+      { id: 'g15', name: "Gustavo Esparza", stars: 5, text: "Great products and nice employees" },
+      { id: 'g16', name: "Jonathan Jackson", stars: 5, text: "Great service great product great people" },
+      { id: 'g17', name: "Ashton McCoy", stars: 5, text: "Best place and best staff around!!" },
+      { id: 'g18', name: "Noah Smith", stars: 5, text: "Great place with a lot of variety." },
     ],
     tiles: [
       { id: 't-exotics', category: 'flower', label: 'Top Tier Exotics', lineId: 'exotics', hue: 272, saturation: 55, intensity: 50 },
