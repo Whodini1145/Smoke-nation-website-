@@ -34,6 +34,10 @@ These decisions were made after the original spec and **override it where they c
 - **Minimum order:** TBD (probably none). Make it an admin setting, default off.
 - **Shipping per category:** add an admin on/off switch for shipping per category (e.g., pickup-only for vapes if needed). Note: federal PACT Act + carrier policies heavily restrict shipping nicotine vapes, and THCA shipping is a gray area. The business says it has legal ways to sell — the switch lets them control this.
 - Payment processor still TBD (must be cannabis/THC-friendly high-risk processor). Build checkout so the processor can be plugged in later.
+- **Processor chosen (Oct 2026): Authorize.Net**, through the merchant rep Nove Maru. Account is in test mode ("Transaction Processing Mode" off) until the site checkout is tested; then the rep switches it to Live.
+  - API Login ID: `9kQy9MtKX2D8`. Public Client Key (for Accept.js in the browser): `6cw2Bf4LsLQp52w7rpT5XS3wS5r2JpV8v47jS3TS25My7abfEUKZd6RCTqrGP42p`. Both are meant to be public.
+  - Transaction Key: kept by the manager, never in chat or the repo. It goes into a Firebase secret for a Cloud Function (needs the Blaze plan).
+  - Plan: Accept.js turns the card into a one-time token in the browser; a Cloud Function charges it with the Transaction Key and only then marks the order paid.
 
 ### Customer accounts
 - **Optional.** Guest checkout is allowed.
