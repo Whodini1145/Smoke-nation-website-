@@ -1,0 +1,13 @@
+{
+  "name": "smoke-nation-functions",
+  "private": true,
+  "description": "Payment server. Built from src/ into lib/index.js by `npm run build:functions` in the project root.",
+  "main": "lib/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.0"
+  }
+}

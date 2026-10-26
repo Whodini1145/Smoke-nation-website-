@@ -166,6 +166,20 @@ export interface Order {
   ageCheck?: 'passed' | 'failed' | 'not_connected';
   /** True once this order's items were taken out of stock counts. */
   stockApplied?: boolean;
+  /** Card payment through Authorize.Net (set by the server after the charge is approved). */
+  payment?: OrderPayment;
+}
+
+export interface OrderPayment {
+  method: 'card';
+  /** Authorize.Net transaction ID ("0" while the account is in test mode). */
+  transId: string;
+  authCode?: string;
+  /** e.g. "XXXX1111" */
+  card?: string;
+  cardType?: string;
+  /** True when the charge ran while the account was in test mode (no real money moved). */
+  test: boolean;
 }
 
 export interface Account {

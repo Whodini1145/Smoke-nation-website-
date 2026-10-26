@@ -79,6 +79,16 @@ export default function OrdersTab() {
                     {AGE_CHECK_TEXT[o.ageCheck ?? 'not_connected']}. Check ID at pickup or delivery.
                   </p>
                   {o.note && <p className="notice notice-quiet">Note: {o.note}</p>}
+                  {o.payment ? (
+                    <p className={`tag ${o.payment.test ? 'tag-low' : 'tag-deal'}`} style={{ justifySelf: 'start' }}>
+                      {o.payment.test ? 'TEST payment, no money moved' : 'Paid by card'}
+                      {o.payment.card ? ` · ${o.payment.cardType ?? 'card'} ${o.payment.card}` : ''}
+                      {o.payment.transId && o.payment.transId !== '0' ? ` · Authorize.Net #${o.payment.transId}` : ''}
+                    </p>
+                  ) : (
+                    <p className="tag tag-low" style={{ justifySelf: 'start' }}>Not paid online</p>
+                  )}
+                  {o.payment && !o.payment.test && <p className="fine">Cancelling here puts the stock back but does not refund the card. Refund it in Authorize.Net.</p>}
                 </div>
                 <OrderItems order={o} />
                 <OrderTotals order={o} />

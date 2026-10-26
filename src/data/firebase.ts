@@ -26,10 +26,13 @@ import {
   type WriteBatch,
 } from 'firebase/firestore';
 import { showToast } from '../components/Overlay';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { firebaseConfig } from './firebaseConfig';
 import { createSeed } from './seed';
 import { replaceDB, setSyncHandler, uid, updateSession } from './store';
 import type { Account, DB, MenuTile, Order, Product, Slide } from './types';
+import type { CheckoutRequest } from '../lib/order';
+import type { CardToken } from '../lib/payment';
 
 // Live database. Firestore layout:
 //   site/config       lines, deals, slides, reviews, menu tiles, settings
@@ -327,4 +330,20 @@ export function removeStaff(id: string) {
 export async function changeMyPassword(password: string) {
   if (!auth.currentUser) throw new Error('Sign in first.');
   await updatePassword(auth.currentUser, password);
+}
+
+// ── Card checkout ──────────────────────────────────────────────────────────
+
+/** Sends the order and the card token to the payment server (functions/src/index.ts). */
+export async function payForOrder(order: CheckoutRequest, opaque: CardToken): Promise<Order> {
+  const call = httpsCallable<{ order: CheckoutRequest; opaque: CardToken }, { order: Order }>(getFunctions(app, 'us-central1'), 'placeOrder', { timeout: 70000 });
+  try {
+    return (await call({ order, opaque })).data.order;
+  } catch (err) {
+    const e = err as { code?: string; message?: string };
+    // Our server's own messages are written for shoppers; anything else gets a plain fallback.
+    if (e.code && e.code !== 'functions/internal' && e.code !== 'functions/unavailable' && e.message) throw new Error(e.message);
+    if (e.code === 'functions/internal' && e.message && e.message !== 'internal' && e.message !== 'INTERNAL') throw new Error(e.message);
+    throw new Error('We couldn’t reach the payment service. Your card was not charged. Check your connection and try again.');
+  }
 }

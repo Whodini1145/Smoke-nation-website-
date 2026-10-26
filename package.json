@@ -11,7 +11,8 @@
     "test": "vitest run",
     "typecheck": "tsc -b",
     "deploy": "npm run build && firebase deploy --only hosting,firestore:rules",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-smoke-nation 'vitest run -c vitest.rules.config.ts'"
+    "test:rules": "firebase emulators:exec --only firestore --project demo-smoke-nation 'vitest run -c vitest.rules.config.ts'",
+    "build:functions": "tsc -p functions && esbuild functions/src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=functions/lib/index.js --external:firebase-admin --external:firebase-functions"
   },
   "dependencies": {
     "@fontsource-variable/figtree": "^5.3.0",
@@ -30,6 +31,7 @@
     "playwright": "^1.63.0",
     "typescript": "^5.9.3",
     "vite": "^5.4.21",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "esbuild": "^0.21.5"
   }
 }

@@ -1,7 +1,9 @@
 rules_version = '2';
 
 // Who can read and change what.
-//   Everyone: read the shop (products, photos, settings) and place orders.
+//   Everyone: read the shop (products, photos, settings).
+//   Orders are created only by the payment server (functions/), after the card
+//   is approved; it also lowers stock. Server code is not limited by these rules.
 //   Customers: read their own orders and profile.
 //   Staff (admins/{uid}): change the shop and see every order.
 //   Main account (meta/firstAdmin): also adds and removes staff.
@@ -18,24 +20,9 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isStaff();
     }
-    // Shoppers may lower a product's stock count only in the same write that
-    // places the order using it (the order must not exist before, and must after).
-    function stockFromNewOrder() {
-      let d = request.resource.data;
-      let o = resource.data;
-      return d.diff(o).affectedKeys().hasOnly(['stock', 'status', 'lastOrderId'])
-        && d.stock is number && o.stock is number
-        && d.stock >= 0 && d.stock < o.stock && o.stock - d.stock <= 500
-        && d.status in ['in', 'low', 'out']
-        && d.lastOrderId is string
-        && !exists(/databases/$(database)/documents/orders/$(d.lastOrderId))
-        && existsAfter(/databases/$(database)/documents/orders/$(d.lastOrderId));
-    }
-
     match /products/{id} {
       allow read: if true;
-      allow create, delete: if isStaff();
-      allow update: if isStaff() || stockFromNewOrder();
+      allow write: if isStaff();
     }
     match /photos/{id} {
       allow read: if true;
@@ -67,9 +54,7 @@ service cloud.firestore {
     }
 
     match /orders/{id} {
-      allow create: if request.resource.data.status == 'new'
-        && (!('customerId' in request.resource.data)
-            || (signedIn() && request.resource.data.customerId == request.auth.uid));
+      allow create: if isStaff();
       allow read: if isStaff()
         || (signedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isStaff();

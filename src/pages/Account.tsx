@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { showToast } from '../components/Overlay';
 import { useDB, useSession } from '../data/store';
 import { customerSignIn, customerSignUp, friendlyError, signOutCustomer } from '../data/accounts';
 import type { Order, OrderStatus } from '../data/types';
 import { money2 } from '../lib/pricing';
+import { LAST_ORDER_KEY } from '../lib/order';
 import { addToCart } from '../lib/util';
 
 export const STATUS_TEXT: Record<OrderStatus, string> = {
@@ -65,11 +66,24 @@ export function OrderTotals({ order }: { order: Order }) {
   );
 }
 
+function lastPlacedOrder(id: string | undefined, state: unknown): Order | undefined {
+  const fromNav = (state as { order?: Order } | null)?.order;
+  if (fromNav?.id === id) return fromNav;
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(LAST_ORDER_KEY) ?? 'null') as Order | null;
+    return saved && saved.id === id ? saved : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function OrderDone() {
   const { id } = useParams();
   const db = useDB();
   const session = useSession();
-  const order = db.orders.find((o) => o.id === id);
+  const location = useLocation();
+  // Guests can't read orders from the database, so the checkout hands the order over directly.
+  const order: Order | undefined = db.orders.find((o) => o.id === id) ?? lastPlacedOrder(id, location.state);
   if (!order) {
     return (
       <div className="wrap page">
@@ -92,6 +106,11 @@ export function OrderDone() {
       )}
       <OrderItems order={order} />
       <OrderTotals order={order} />
+      {order.payment && (
+        <p className="fine">
+          Paid by card{order.payment.card ? ` ending ${order.payment.card.slice(-4)}` : ''}.{order.payment.test ? ' (Test mode: no real charge.)' : ''}
+        </p>
+      )}
       <div className="btn-row">
         <Link to="/" className="btn btn-primary">Back to the shop</Link>
         {session.customerId ? <Link to="/account" className="btn btn-ghost">See all your orders</Link> : <Link to="/account" className="btn btn-ghost">Create an account to track orders</Link>}

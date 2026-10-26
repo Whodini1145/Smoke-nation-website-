@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
   // Security rules tests need the Firestore emulator: run them with `npm run test:rules`.
-  test: { exclude: ['tests/**', 'node_modules/**'] },
+  test: { exclude: ['tests/**', '**/node_modules/**'] },
   build:
     mode === 'preview'
       ? { outDir: 'preview-dist' }

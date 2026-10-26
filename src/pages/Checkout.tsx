@@ -1,12 +1,13 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { getDB, uid, updateDB, useCart, useDB, useSession, USE_FIREBASE } from '../data/store';
 import type { Fulfillment, Order } from '../data/types';
-import { lineLabel } from '../lib/catalog';
 import { money, money2, priceCart } from '../lib/pricing';
 import { clearCart } from '../lib/util';
-import { isCounted, setStock, stockText, usageByProduct } from '../lib/stock';
+import { isCounted, setStock } from '../lib/stock';
 import { AGE_CHECK_CONNECTED, verifyAge } from '../lib/ageCheck';
+import { buildOrder, LAST_ORDER_KEY, type CheckoutRequest } from '../lib/order';
+import { loadAccept, tokenizeCard } from '../lib/payment';
 import { Summary } from './Cart';
 
 export default function Checkout() {
@@ -27,8 +28,15 @@ export default function Checkout() {
     zip: '',
     note: '',
   });
+  const [card, setCard] = useState({ number: '', expiry: '', code: '', zip: '' });
   const [ageOk, setAgeOk] = useState(false);
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  // Get the card script ready while the shopper fills in the form.
+  useEffect(() => {
+    if (USE_FIREBASE) loadAccept().catch(() => undefined);
+  }, []);
 
   const shipBlocked = priceCart(cart, db, db.settings).shippingBlockedBy.length > 0;
   const fulfillment: Fulfillment = shipBlocked ? 'pickup' : chosen;
@@ -37,63 +45,67 @@ export default function Checkout() {
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
+  const setCardField = (k: keyof typeof card) => (e: React.ChangeEvent<HTMLInputElement>) => setCard({ ...card, [k]: e.target.value });
+
+  function done(order: Order) {
+    try {
+      sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+    } catch {
+      /* private mode: the confirmation page still gets the order below */
+    }
+    clearCart();
+    nav(`/order/${order.id}`, { replace: true, state: { order } });
+  }
+
   async function placeOrder(e: FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setError('');
-    if (t.belowMinimum > 0) return setError(`The minimum order is ${money(db.settings.minOrder)}. Add ${money2(t.belowMinimum)} more to check out.`);
     if (!ageOk) return setError('Confirm you are 21 or older to place the order.');
-    const needed = usageByProduct(t.lines.map((l) => l.line));
-    for (const [id, amount] of needed) {
-      const p = db.products.find((x) => x.id === id);
-      if (p && isCounted(p) && amount > p.stock!) {
-        return setError(`Only ${stockText(p).replace(' left', '')} of ${p.name} left. Lower the amount in your cart, then try again.`);
-      }
-    }
-    const ageCheck = await verifyAge({ name: form.name, email: form.email, phone: form.phone });
-    if (ageCheck === 'failed') return setError('We couldn’t verify your age, so this order can’t be placed. You can still shop in store with a valid ID.');
-    const latest = getDB();
-    const order: Order = {
-      id: uid('o'),
-      number: USE_FIREBASE ? 100000 + Math.floor(Math.random() * 900000) : 1001 + latest.orders.length,
-      createdAt: Date.now(),
-      customerId: me?.id,
-      name: form.name.trim(),
-      email: form.email.trim().toLowerCase(),
-      phone: form.phone.trim(),
+    const request: CheckoutRequest = {
+      cart,
       fulfillment,
-      address: fulfillment === 'ship' ? { street: form.street.trim(), city: form.city.trim(), state: form.state.trim(), zip: form.zip.trim() } : undefined,
-      items: t.lines.map((l) => ({
-        productId: l.product.id,
-        name: l.product.name,
-        lineName: l.productLine ? lineLabel(l.productLine) : '',
-        size: l.line.size,
-        qty: l.line.qty,
-        unitPrice: l.unit,
-      })),
-      subtotal: t.subtotal,
-      dealSavings: t.dealSavings,
-      dealNames: t.deals.map((d) => `${d.name}${d.times > 1 ? ` ×${d.times}` : ''}`),
-      shipping: t.shipping,
-      cardFee: t.cardFee,
-      tax: t.tax,
-      total: t.total,
-      status: 'new',
-      ageCheck,
-      note: form.note.trim() || undefined,
-      stockApplied: true,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      address: fulfillment === 'ship' ? { street: form.street, city: form.city, state: form.state, zip: form.zip } : undefined,
+      note: form.note,
+      ageCheck: 'not_connected',
     };
-    updateDB((d) => {
-      d.orders.unshift(order);
-      // Take what was bought out of the stock counts.
-      for (const [id, amount] of needed) {
-        const p = d.products.find((x) => x.id === id);
-        if (!p || !isCounted(p)) continue;
-        setStock(p, p.stock! - amount, d.settings);
-        p.lastOrderId = order.id;
+    // Same checks the payment server runs, so most problems show before the card is touched.
+    const check = buildOrder(request, { ...db, settings: db.settings }, { id: 'check', number: 0, now: 0 });
+    if (!check.ok) return setError(check.error);
+
+    setBusy(true);
+    try {
+      request.ageCheck = await verifyAge({ name: form.name, email: form.email, phone: form.phone });
+      if (request.ageCheck === 'failed') throw new Error('We couldn’t verify your age, so this order can’t be placed. You can still shop in store with a valid ID.');
+
+      if (USE_FIREBASE) {
+        const token = await tokenizeCard(card);
+        const { payForOrder } = await import('../data/firebase');
+        done(await payForOrder(request, token));
+        return;
       }
-    });
-    clearCart();
-    nav(`/order/${order.id}`, { replace: true });
+
+      // Preview copy (no database): save the order in this browser without charging anything.
+      const latest = getDB();
+      const r = buildOrder(request, { ...latest, settings: latest.settings }, { id: uid('o'), number: 1001 + latest.orders.length, now: Date.now(), customerId: me?.id });
+      if (!r.ok) throw new Error(r.error);
+      updateDB((d) => {
+        d.orders.unshift(r.order);
+        for (const [id, amount] of r.needed) {
+          const p = d.products.find((x) => x.id === id);
+          if (!p || !isCounted(p)) continue;
+          setStock(p, p.stock! - amount, d.settings);
+          p.lastOrderId = r.order.id;
+        }
+      });
+      done(r.order);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Your card was not charged. Try again.');
+      setBusy(false);
+    }
   }
 
   return (
@@ -170,12 +182,37 @@ export default function Checkout() {
           )}
 
           <fieldset className="fields">
-            <legend className="h-section">ID check and payment</legend>
-            <p className="notice notice-quiet">
-              {AGE_CHECK_CONNECTED
-                ? 'When you place your order, you’ll confirm your ID with our age check partner, then pay.'
-                : 'Online ID check and card payment connect here once the shop picks its providers. In this preview, placing an order saves it without checking ID or charging anything.'}
-            </p>
+            <legend className="h-section">Pay by card</legend>
+            {USE_FIREBASE ? (
+              <>
+                <label>
+                  Card number
+                  <input required autoComplete="cc-number" inputMode="numeric" value={card.number} onChange={setCardField('number')} placeholder="1234 5678 9012 3456" maxLength={23} />
+                </label>
+                <div className="fields-row">
+                  <label>
+                    Expires
+                    <input required autoComplete="cc-exp" inputMode="numeric" value={card.expiry} onChange={setCardField('expiry')} placeholder="MM/YY" maxLength={7} />
+                  </label>
+                  <label className="narrow">
+                    Security code
+                    <input required autoComplete="cc-csc" inputMode="numeric" value={card.code} onChange={setCardField('code')} placeholder="CVV" maxLength={4} />
+                  </label>
+                  <label className="narrow">
+                    Billing ZIP
+                    <input required autoComplete="billing postal-code" inputMode="numeric" value={card.zip} onChange={setCardField('zip')} maxLength={10} />
+                  </label>
+                </div>
+                <p className="fine">Card details go straight to our processor, Authorize.Net (a Visa company), and are never stored by Smoke Nation.</p>
+              </>
+            ) : (
+              <p className="notice notice-quiet">This is the preview copy: placing an order saves it here without charging a card.</p>
+            )}
+            {AGE_CHECK_CONNECTED && <p className="notice notice-quiet">When you place your order, you’ll confirm your ID with our age check partner, then pay.</p>}
+          </fieldset>
+
+          <fieldset className="fields">
+            <legend className="h-section">Last step</legend>
             <label>
               Note for the shop (optional)
               <textarea rows={2} value={form.note} onChange={set('note')} />
@@ -211,8 +248,8 @@ export default function Checkout() {
               {error}
             </p>
           )}
-          <button type="submit" className="btn btn-primary btn-block">
-            Place order, {money2(t.total)}
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+            {busy ? 'Processing… please wait' : `Pay ${money2(t.total)} and place order`}
           </button>
         </aside>
       </form>
