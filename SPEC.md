@@ -37,7 +37,7 @@ These decisions were made after the original spec and **override it where they c
 - **Processor chosen (Oct 2026): Authorize.Net**, through the merchant rep Nove Maru. Account is in test mode ("Transaction Processing Mode" off) until the site checkout is tested; then the rep switches it to Live.
   - API Login ID: `9kQy9MtKX2D8`. Public Client Key (for Accept.js in the browser): `6cw2Bf4LsLQp52w7rpT5XS3wS5r2JpV8v47jS3TS25My7abfEUKZd6RCTqrGP42p`. Both are meant to be public.
   - Transaction Key: kept by the manager, never in chat or the repo. It goes into a Firebase secret for a Cloud Function (needs the Blaze plan).
-  - Plan: Accept.js turns the card into a one-time token in the browser; a Cloud Function charges it with the Transaction Key and only then marks the order paid.
+  - Built Oct 2026: Accept.js turns the card into a one-time token in the browser; the `placeOrder` Cloud Function reprices the cart, holds stock, charges, and saves the order only when approved. Shoppers can no longer write orders or stock directly. Cancelling a paid order in admin does not refund the card yet (refund in Authorize.Net).
 
 ### Customer accounts
 - **Optional.** Guest checkout is allowed.
