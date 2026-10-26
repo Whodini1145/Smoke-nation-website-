@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { USE_FIREBASE, useDB, useSession } from '../../data/store';
-import { friendlyError, setupMainAdmin, signOutStaff, staffSignIn } from '../../data/accounts';
+import { friendlyError, resetPassword, setupMainAdmin, signOutStaff, staffSignIn } from '../../data/accounts';
 import DealsTab from './Deals';
 import HomeTab from './HomeScreen';
 import MenuTab from './MenuPanel';
@@ -23,7 +23,19 @@ function AdminLogin() {
   const firstRun = USE_FIREBASE ? db.mainAdminId === null : db.admins.length === 0;
   const [f, setF] = useState({ name: '', email: '', password: '', confirm: '' });
   const [error, setError] = useState('');
+  const [sent, setSent] = useState('');
   const [busy, setBusy] = useState(false);
+
+  async function forgot() {
+    setError('');
+    setSent('');
+    try {
+      await resetPassword(f.email);
+      setSent(`If ${f.email.trim()} is a staff account, a reset link is on its way. Check that inbox (and the spam folder), tap the link, pick a new password, then sign in here.`);
+    } catch (err) {
+      setError(await friendlyError(err));
+    }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -74,7 +86,13 @@ function AdminLogin() {
           </label>
         )}
         {error && <p className="form-error" role="alert">{error}</p>}
+        {sent && <p className="notice" role="status">{sent}</p>}
         <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{busy ? 'One moment…' : firstRun ? 'Create admin account' : 'Sign in'}</button>
+        {!firstRun && (
+          <button type="button" className="btn btn-ghost btn-small" onClick={forgot}>
+            Forgot password? Type your email above, then tap here
+          </button>
+        )}
       </form>
       <p className="fine">
         <Link to="/">Back to the shop</Link>

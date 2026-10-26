@@ -7,7 +7,7 @@ import { clearCart } from '../lib/util';
 import { isCounted, setStock } from '../lib/stock';
 import { AGE_CHECK_CONNECTED, verifyAge } from '../lib/ageCheck';
 import { buildOrder, LAST_ORDER_KEY, type CheckoutRequest } from '../lib/order';
-import { loadAccept, tokenizeCard } from '../lib/payment';
+import { digitsOnly, formatCardNumber, formatExpiry, loadAccept, tokenizeCard } from '../lib/payment';
 import { Summary } from './Cart';
 
 export default function Checkout() {
@@ -45,7 +45,13 @@ export default function Checkout() {
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
-  const setCardField = (k: keyof typeof card) => (e: React.ChangeEvent<HTMLInputElement>) => setCard({ ...card, [k]: e.target.value });
+  const FORMAT: Record<keyof typeof card, (v: string) => string> = {
+    number: formatCardNumber,
+    expiry: (v) => formatExpiry(v, card.expiry),
+    code: (v) => digitsOnly(v, 4),
+    zip: (v) => digitsOnly(v, 5),
+  };
+  const setCardField = (k: keyof typeof card) => (e: React.ChangeEvent<HTMLInputElement>) => setCard({ ...card, [k]: FORMAT[k](e.target.value) });
 
   function done(order: Order) {
     try {
@@ -187,12 +193,12 @@ export default function Checkout() {
               <>
                 <label>
                   Card number
-                  <input required autoComplete="cc-number" inputMode="numeric" value={card.number} onChange={setCardField('number')} placeholder="1234 5678 9012 3456" maxLength={23} />
+                  <input required autoComplete="cc-number" inputMode="numeric" value={card.number} onChange={setCardField('number')} placeholder="1234-5678-9012-3456" maxLength={23} />
                 </label>
                 <div className="fields-row">
                   <label>
                     Expires
-                    <input required autoComplete="cc-exp" inputMode="numeric" value={card.expiry} onChange={setCardField('expiry')} placeholder="MM/YY" maxLength={7} />
+                    <input required autoComplete="cc-exp" inputMode="numeric" value={card.expiry} onChange={setCardField('expiry')} placeholder="MM/YY" maxLength={5} />
                   </label>
                   <label className="narrow">
                     Security code
@@ -200,7 +206,7 @@ export default function Checkout() {
                   </label>
                   <label className="narrow">
                     Billing ZIP
-                    <input required autoComplete="billing postal-code" inputMode="numeric" value={card.zip} onChange={setCardField('zip')} maxLength={10} />
+                    <input required autoComplete="billing postal-code" inputMode="numeric" value={card.zip} onChange={setCardField('zip')} maxLength={5} />
                   </label>
                 </div>
                 <p className="fine">Card details go straight to our processor, Authorize.Net (a Visa company), and are never stored by Smoke Nation.</p>

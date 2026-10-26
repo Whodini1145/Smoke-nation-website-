@@ -85,3 +85,31 @@ export async function tokenizeCard(card: CardInput): Promise<CardToken> {
     );
   });
 }
+
+// ── Typing helpers for the card form ───────────────────────────────────────
+
+/** "4111111111111111" → "4111-1111-1111-1111" (American Express: 4-6-5). */
+export function formatCardNumber(raw: string): string {
+  const d = raw.replace(/\D/g, '').slice(0, 19);
+  const groups = /^3[47]/.test(d) ? [4, 6, 5] : [4, 4, 4, 4, 3];
+  const parts: string[] = [];
+  let i = 0;
+  for (const g of groups) {
+    if (i >= d.length) break;
+    parts.push(d.slice(i, i + g));
+    i += g;
+  }
+  return parts.join('-');
+}
+
+/** Adds the slash after the month as they type: "12" → "12/", "1225" → "12/25", "5" → "05/". */
+export function formatExpiry(raw: string, prev: string): string {
+  const deleting = raw.length < prev.length;
+  let d = raw.replace(/\D/g, '').slice(0, 4);
+  if (d.length === 1 && +d > 1) d = `0${d}`;
+  if (d.length >= 3) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  if (d.length === 2) return deleting ? d : `${d}/`;
+  return d;
+}
+
+export const digitsOnly = (raw: string, max: number) => raw.replace(/\D/g, '').slice(0, max);

@@ -97,3 +97,11 @@ export async function changeMyPassword(adminId: string, password: string) {
     d.admins.find((a) => a.id === adminId)!.passwordHash = passwordHash;
   });
 }
+
+/** Live site only: emails a link to set a new password. */
+export async function resetPassword(email: string) {
+  email = email.trim().toLowerCase();
+  if (!email.includes('@')) throw new Error('Type your email address first.');
+  if (!USE_FIREBASE) throw new Error('Password reset emails only work on the live site.');
+  return (await live()).sendPasswordReset(email);
+}

@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   getAuth,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updatePassword,
@@ -325,6 +326,11 @@ export async function addStaff(name: string, email: string, password: string) {
 
 export function removeStaff(id: string) {
   return deleteDoc(doc(fs, 'admins', id));
+}
+
+/** Emails a link to set a new password. Works for staff and customers. */
+export async function sendPasswordReset(email: string) {
+  await sendPasswordResetEmail(auth, email);
 }
 
 export async function changeMyPassword(password: string) {
