@@ -19,9 +19,7 @@ export const FLOWER_DISCLAIMER = 'Hemp-derived THC, low dose Delta 9';
 
 const lines: Line[] = [
   { id: 'exotics', category: 'flower', name: 'Top Tier Exotics', potency: 4, sort: 1 },
-  { id: 'hydro', category: 'flower', name: 'Indoor Hydroponics', potency: 3, sort: 2 },
   { id: 'aaa', category: 'flower', name: 'Indoor AAA', potency: 2, sort: 3 },
-  { id: 'greenhouse', category: 'flower', name: 'Greenhouse', potency: 1, sort: 4 },
   { id: 'foger-pods', category: 'vapes', brand: 'Foger', name: 'Foger Pods 30K', sort: 1 },
   { id: 'foger-battery', category: 'vapes', brand: 'Foger', name: 'Foger Battery', sort: 2 },
   { id: 'gb-x2-25', category: 'vapes', brand: 'Geek Bar', name: 'Pulse 2 25K', sort: 3 },
@@ -35,9 +33,7 @@ const id = (p: string) => `${p}-${(++n).toString(36)}`;
 
 const tierPrices: Record<string, SizePrices> = {
   exotics: { '1g': 10, '3.5g': 30, '7g': 50, '14g': 100, '1oz': 180 },
-  hydro: { '1g': 12, '3.5g': 35, '7g': 60, '14g': 100, '1oz': 170 },
   aaa: { '1g': 10, '3.5g': 30, '7g': 50, '14g': 85, '1oz': 140 },
-  greenhouse: { '1g': 7, '3.5g': 20, '7g': 35, '14g': 60, '1oz': 100 },
 };
 
 function flower(lineId: string, name: string, hue: number, saturation: number, intensity: number, extra: Partial<Product> = {}): Product {
@@ -181,9 +177,7 @@ export function createSeed(): DB {
     ],
     tiles: [
       { id: 't-exotics', category: 'flower', label: 'Top Tier Exotics', lineId: 'exotics', hue: 272, saturation: 55, intensity: 50 },
-      { id: 't-hydro', category: 'flower', label: 'Indoor Hydroponics', lineId: 'hydro', hue: 96, saturation: 55, intensity: 50 },
       { id: 't-aaa', category: 'flower', label: 'Indoor AAA', lineId: 'aaa', hue: 47, saturation: 92, intensity: 45 },
-      { id: 't-greenhouse', category: 'flower', label: 'Greenhouse', lineId: 'greenhouse', hue: 174, saturation: 58, intensity: 40 },
       { id: 't-foger-pods', category: 'vapes', label: 'Foger Pods', lineId: 'foger-pods', hue: 330, saturation: 72, intensity: 45, photo: '/products/tiles/foger-pods.webp' },
       { id: 't-foger-battery', category: 'vapes', label: 'Foger Battery', lineId: 'foger-battery', hue: 0, saturation: 0, intensity: 50, photo: photo('foger-battery') },
       { id: 't-x2-25', category: 'vapes', label: 'Pulse 2 25K', lineId: 'gb-x2-25', hue: 214, saturation: 72, intensity: 50, photo: photo('geekbar/pulse2-dragon-melon') },
