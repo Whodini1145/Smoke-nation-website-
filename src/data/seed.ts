@@ -77,7 +77,7 @@ const STRAIN_COLOR: Record<Strain, [number, number]> = { indica: [272, 55], hybr
 const BUD_PHOTO: Record<string, string> = {
   'High Roller': 'high-roller-v2',
   'Black Zebra': 'black-zebra-v2',
-  'New Money': 'new-money-v2',
+  'Truffle': 'truffle-v2',
   'Godfather OG': 'godfather-og-v2',
   'Donny Burger': 'donny-burger-v2',
   'Biscotti': 'biscotti-v2',
@@ -99,7 +99,7 @@ const gb = (lineId: string, file: string, price: number, hue: number, saturation
 
 const products: Product[] = [
   // THCA flower: exotics, grouped Indica → Hybrid → Sativa. Photos are added by the shop.
-  ...['High Roller', 'Black Zebra', 'New Money', 'Godfather OG', 'Donny Burger'].map((n) => exotic(n, 'indica')),
+  ...['High Roller', 'Black Zebra', 'Truffle', 'Godfather OG', 'Donny Burger'].map((n) => exotic(n, 'indica')),
   ...['Biscotti', 'Warheads', 'Crunch Berries', 'Blue Lobster', 'Blue Gummy'].map((n) => exotic(n, 'hybrid')),
   ...['Motor Breath', '"It\'s a Secret"', 'Purple Hulk', 'Candy Rings', 'Durban Poison'].map((n) => exotic(n, 'sativa')),
 
