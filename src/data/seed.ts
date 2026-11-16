@@ -90,9 +90,12 @@ const BUD_PHOTO: Record<string, string> = {
   'Purple Hulk': 'purple-hulk-v2',
   'Candy Rings': 'candy-rings-v2',
   'Durban Poison': 'durban-poison-v2',
+  'Cookies N Cream': 'cookies-n-cream-v2',
+  'Fruity Pebbles': 'fruity-pebbles-v2',
+  'Super Runtz': 'super-runtz-v2',
 };
-const exotic = (name: string, strain: Strain) =>
-  flower('exotics', name, ...STRAIN_COLOR[strain], 45, { strain, description: '', ...(BUD_PHOTO[name] ? { photo: photo(`flower/${BUD_PHOTO[name]}`) } : {}) });
+const exotic = (name: string, strain: Strain, lineId = 'exotics') =>
+  flower(lineId, name, ...STRAIN_COLOR[strain], 45, { strain, description: '', ...(BUD_PHOTO[name] ? { photo: photo(`flower/${BUD_PHOTO[name]}`) } : {}) });
 
 const gb = (lineId: string, file: string, price: number, hue: number, saturation: number, extra: Partial<Product> = {}) =>
   (name: string) => vape(lineId, name, price, hue, saturation, 30, { photo: photo(`geekbar/${file}-${slug(name)}`), ...extra });
@@ -102,6 +105,10 @@ const products: Product[] = [
   ...['High Roller', 'Black Zebra', 'Truffle', 'Godfather OG', 'Donny Burger'].map((n) => exotic(n, 'indica')),
   ...['Biscotti', 'Warheads', 'Crunch Berries', 'Blue Lobster', 'Blue Gummy'].map((n) => exotic(n, 'hybrid')),
   ...['Motor Breath', '"It\'s a Secret"', 'Purple Hulk', 'Candy Rings', 'Durban Poison'].map((n) => exotic(n, 'sativa')),
+  // Indoor AAA, same order.
+  exotic('Cookies N Cream', 'indica', 'aaa'),
+  exotic('Fruity Pebbles', 'hybrid', 'aaa'),
+  exotic('Super Runtz', 'sativa', 'aaa'),
 
   // Foger pods, grouped by flavor family (see FOGER_ORDER). Sold-out flavors stay in their family.
   ...FOGER_ORDER.map((name) => FOGER_FLAVORS.find((f) => f.name === name)!).map((f) =>
