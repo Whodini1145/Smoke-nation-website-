@@ -3,7 +3,9 @@
 //   2. Holds the stock.
 //   3. Charges the card token through Authorize.Net.
 //   4. Saves the order only if the charge was approved; otherwise puts the stock back.
-// The Transaction Key lives in Google Secret Manager as AUTHNET_TRANSACTION_KEY.
+// When the online ID check is on, step 0 asks AgeChecker.Net that the customer's ID passed.
+// The Transaction Key lives in Google Secret Manager as AUTHNET_TRANSACTION_KEY,
+// the AgeChecker Account Secret as AGECHECKER_SECRET.
 
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -14,13 +16,16 @@ import { logger } from 'firebase-functions';
 import type { Deal, Line, Order, Product, Settings } from '../../src/data/types';
 import { buildOrder, type CheckoutRequest } from '../../src/lib/order';
 import { isCounted, setStock, stockText } from '../../src/lib/stock';
+import { AGE_CHECK_CONNECTED } from '../../src/lib/ageCheck';
 import { charge, voidCharge, type OpaqueData } from './authnet';
+import { checkAgeStatus, fetchAgeStatus, validUuid } from './agechecker';
 
 initializeApp();
 const db = getFirestore();
 db.settings({ ignoreUndefinedProperties: true });
 
 const TRANSACTION_KEY = defineSecret('AUTHNET_TRANSACTION_KEY');
+const AGECHECKER_SECRET = defineSecret('AGECHECKER_SECRET');
 setGlobalOptions({ region: 'us-central1', maxInstances: 5 });
 
 // Used only if a setting is missing from the shop's saved settings.
@@ -62,7 +67,7 @@ async function moveStock(needed: Map<string, number>, sign: 1 | -1, orderId: str
   });
 }
 
-export const placeOrder = onCall({ secrets: [TRANSACTION_KEY], timeoutSeconds: 60, memory: '256MiB' }, async (req) => {
+export const placeOrder = onCall({ secrets: [TRANSACTION_KEY, AGECHECKER_SECRET], timeoutSeconds: 60, memory: '256MiB' }, async (req) => {
   const input = req.data as { order?: CheckoutRequest; opaque?: unknown };
   const opaque = readOpaque(input?.opaque);
   if (!input?.order || !opaque) throw new HttpsError('invalid-argument', 'The card details didn’t come through. Try again.');
@@ -78,6 +83,30 @@ export const placeOrder = onCall({ secrets: [TRANSACTION_KEY], timeoutSeconds: 6
   if (!built.ok) throw new HttpsError('failed-precondition', built.error);
   const { order, needed } = built;
   if (order.total < 0.5) throw new HttpsError('failed-precondition', 'This order total is too small to charge a card.');
+
+  // Never trust the browser's "passed": ask AgeChecker, and use each ID check for one order only.
+  delete order.ageCheckId;
+  order.ageCheck = 'not_connected';
+  const ageId = input.order.ageCheckId;
+  if (AGE_CHECK_CONNECTED) {
+    if (!validUuid(ageId)) throw new HttpsError('failed-precondition', 'Please finish the ID check before paying.');
+    if ((await db.doc(`ageChecks/${ageId}`).get()).exists) {
+      throw new HttpsError('failed-precondition', 'That ID check was already used for another order. Press Pay again to redo it.');
+    }
+    let problem: string | null;
+    try {
+      problem = checkAgeStatus(await fetchAgeStatus(ageId, AGECHECKER_SECRET.value().trim()), order.name);
+    } catch (err) {
+      logger.error('age check lookup failed', err);
+      problem = 'The ID check service couldn’t be reached. Try again in a minute. Your card was not charged.';
+    }
+    if (problem) {
+      logger.info('age check refused', { id, ageId, problem });
+      throw new HttpsError('failed-precondition', problem);
+    }
+    order.ageCheck = 'passed';
+    order.ageCheckId = ageId;
+  }
 
   await moveStock(needed, -1, id, settings);
 
@@ -123,6 +152,9 @@ export const placeOrder = onCall({ secrets: [TRANSACTION_KEY], timeoutSeconds: 6
     await voidCharge(key, result.transId).catch((e) => logger.error('void failed', { id, e }));
     await moveStock(needed, 1, id, settings).catch(() => undefined);
     throw new HttpsError('internal', 'Your order couldn’t be saved, so the charge was cancelled. Try again.');
+  }
+  if (paid.ageCheckId) {
+    await db.doc(`ageChecks/${paid.ageCheckId}`).set({ orderId: id, at: Date.now() }).catch((err) => logger.error('age check record failed', { id, err }));
   }
   logger.info('order paid', { id, number: paid.number, total: paid.total, test: result.test });
   return { order: paid };
