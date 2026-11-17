@@ -20,6 +20,8 @@ export interface CheckoutRequest {
   address?: { street: string; city: string; state: string; zip: string };
   note?: string;
   ageCheck: AgeCheckResult;
+  /** AgeChecker.Net verification ID; the payment server checks it with AgeChecker. */
+  ageCheckId?: string;
 }
 
 export type ShopData = Pick<DB, 'products' | 'lines' | 'deals'> & { settings: Settings };

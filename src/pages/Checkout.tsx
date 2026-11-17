@@ -5,7 +5,7 @@ import type { Fulfillment, Order } from '../data/types';
 import { money, money2, priceCart } from '../lib/pricing';
 import { clearCart } from '../lib/util';
 import { isCounted, setStock } from '../lib/stock';
-import { AGE_CHECK_CONNECTED, verifyAge } from '../lib/ageCheck';
+import { AGE_CHECK_CONNECTED, preloadAgeCheck, verifyAge } from '../lib/ageCheck';
 import { buildOrder, LAST_ORDER_KEY, type CheckoutRequest } from '../lib/order';
 import { digitsOnly, formatCardNumber, formatExpiry, loadAccept, tokenizeCard } from '../lib/payment';
 import { Summary } from './Cart';
@@ -32,10 +32,13 @@ export default function Checkout() {
   const [ageOk, setAgeOk] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // Once their ID is accepted, a declined card can be retried without redoing the ID check.
+  const [ageCheckId, setAgeCheckId] = useState('');
 
   // Get the card script ready while the shopper fills in the form.
   useEffect(() => {
     if (USE_FIREBASE) loadAccept().catch(() => undefined);
+    preloadAgeCheck();
   }, []);
 
   const shipBlocked = priceCart(cart, db, db.settings).shippingBlockedBy.length > 0;
@@ -84,8 +87,18 @@ export default function Checkout() {
 
     setBusy(true);
     try {
-      request.ageCheck = await verifyAge({ name: form.name, email: form.email, phone: form.phone });
-      if (request.ageCheck === 'failed') throw new Error('We couldn’t verify your age, so this order can’t be placed. You can still shop in store with a valid ID.');
+      if (ageCheckId) {
+        request.ageCheck = 'passed';
+        request.ageCheckId = ageCheckId;
+      } else {
+        const age = await verifyAge({ name: form.name, email: form.email });
+        if (age.result === 'failed') throw new Error('We couldn’t verify your age, so this order can’t be placed. You can still shop in store with a valid ID.');
+        request.ageCheck = age.result;
+        if (age.id) {
+          request.ageCheckId = age.id;
+          setAgeCheckId(age.id);
+        }
+      }
 
       if (USE_FIREBASE) {
         const token = await tokenizeCard(card);

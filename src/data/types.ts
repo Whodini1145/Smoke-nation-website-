@@ -164,6 +164,8 @@ export interface Order {
   status: OrderStatus;
   note?: string;
   ageCheck?: 'passed' | 'failed' | 'not_connected';
+  /** AgeChecker.Net verification ID (when the online ID check was used). */
+  ageCheckId?: string;
   /** True once this order's items were taken out of stock counts. */
   stockApplied?: boolean;
   /** Card payment through Authorize.Net (set by the server after the charge is approved). */
