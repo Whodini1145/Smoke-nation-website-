@@ -38,6 +38,10 @@ These decisions were made after the original spec and **override it where they c
   - API Login ID: `9kQy9MtKX2D8`. Public Client Key (for Accept.js in the browser): `6cw2Bf4LsLQp52w7rpT5XS3wS5r2JpV8v47jS3TS25My7abfEUKZd6RCTqrGP42p`. Both are meant to be public.
   - Transaction Key: kept by the manager, never in chat or the repo. It goes into a Firebase secret for a Cloud Function (needs the Blaze plan).
   - Built Oct 2026: Accept.js turns the card into a one-time token in the browser; the `placeOrder` Cloud Function reprices the cart, holds stock, charges, and saves the order only when approved. Shoppers can no longer write orders or stock directly. Cancelling a paid order in admin does not refund the card yet (refund in Authorize.Net).
+- **Age / ID verification (Nov 2026): AgeChecker.net**, free trial set up by Jacob Lewy (account on whodinicreative@gmail.com; may move to the business later, which means new keys). Texas requires a government-ID check on every hemp sale, online too.
+  - Public API keys (one per site, made to be on the website): smokenationtx.com `CJcVUg61F3O4L2g0w97EXyNymBLZ9ElA`; smoke-nation.web.app `Rr6IMwsRRTKXkaP7NsUR8bnJKDbQYIHz`.
+  - Account Secret: kept by the manager, never in chat or the repo; goes to Secret Manager for the server-side check.
+  - Setup docs are behind the AgeChecker login (Install tab); not wired up yet.
 
 ### Customer accounts
 - **Optional.** Guest checkout is allowed.
