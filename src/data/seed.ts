@@ -33,7 +33,7 @@ const id = (p: string) => `${p}-${(++n).toString(36)}`;
 
 const tierPrices: Record<string, SizePrices> = {
   exotics: { '1g': 10, '3.5g': 30, '7g': 50, '14g': 100, '1oz': 180 },
-  aaa: { '1g': 10, '3.5g': 30, '7g': 50, '14g': 85, '1oz': 140 },
+  aaa: { '1g': 6, '3.5g': 20, '7g': 35, '14g': 70, '1oz': 120 },
 };
 
 function flower(lineId: string, name: string, hue: number, saturation: number, intensity: number, extra: Partial<Product> = {}): Product {
