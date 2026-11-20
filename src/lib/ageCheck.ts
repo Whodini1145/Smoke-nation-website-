@@ -8,8 +8,8 @@
 
 export type AgeCheckResult = 'passed' | 'failed' | 'not_connected';
 
-/** Turn the popup on. While false, checkout works as before (ID checked at pickup). */
-export const AGE_CHECK_CONNECTED = false;
+/** The popup is on. Set false to go back to checking ID only at pickup (then redeploy functions too). */
+export const AGE_CHECK_CONNECTED = true;
 
 const KEYS: Record<string, string> = {
   'smokenationtx.com': 'CJcVUg61F3O4L2g0w97EXyNymBLZ9ElA',
@@ -84,9 +84,10 @@ export async function verifyAge(customer: { name: string; email: string }): Prom
       require_email: true,
       data: { first_name: first ?? '', last_name: rest.join(' '), contact_email: customer.email },
       accent_color: '#1f7a4d',
+      // A denial isn't final: the popup offers "Try Again" with a new photo.
+      // We only go on once they're accepted and press Continue.
       onstatuschanged: (v: Verification) => {
         last = v;
-        if (v.status === 'denied') resolve({ result: 'failed', id: v.uuid });
       },
       // Called when they press Continue after being accepted.
       onclosed: (done?: () => void) => {
